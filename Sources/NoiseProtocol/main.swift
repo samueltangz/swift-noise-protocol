@@ -1,19 +1,19 @@
 let clientStaticKeyPair = generateKeyPair()
 let serverStaticKeyPair = generateKeyPair()
 
-let clientState = HandshakeState(pattern: .KK, initiator: true, s: clientStaticKeyPair, rs: serverStaticKeyPair.publicKey)
-let serverState = HandshakeState(pattern: .KK, initiator: false, s: serverStaticKeyPair, rs: clientStaticKeyPair.publicKey)
+let clientState = try! HandshakeState(pattern: .KK, initiator: true, s: clientStaticKeyPair, rs: serverStaticKeyPair.publicKey)
+let serverState = try! HandshakeState(pattern: .KK, initiator: false, s: serverStaticKeyPair, rs: clientStaticKeyPair.publicKey)
 
 // -> e, es, ss
-let clientTx = clientState.writeMessage(payload: Array("".utf8))
-serverState.readMessage(message: clientTx)
+let clientTx = try! clientState.writeMessage(payload: Array("".utf8))
+try! serverState.readMessage(message: clientTx)
 
 // <- e, ee, se
-let serverTx = serverState.writeMessage(payload: Array("".utf8))
-clientState.readMessage(message: serverTx)
+let serverTx = try! serverState.writeMessage(payload: Array("".utf8))
+try! clientState.readMessage(message: serverTx)
 
-let serverSplits = serverState.split()
-let clientSplits = clientState.split()
+let serverSplits = try! serverState.split()
+let clientSplits = try! clientState.split()
 
 let ciphertext0 = serverSplits.0.encryptWithAd(ad: [], plaintext: Array("test".utf8))
 let plaintext0 = clientSplits.0.decryptWithAd(ad: [], ciphertext: ciphertext0)

@@ -5,7 +5,7 @@ enum CipherError: Error {
 }
 
 func nonceToUInt8Array(n: Nonce) -> Array<UInt8> {
-  // TODO
+  // TODO: implement this
   return [0, 0, 0, 0, 0, 0, 0, 0]
 }
 
