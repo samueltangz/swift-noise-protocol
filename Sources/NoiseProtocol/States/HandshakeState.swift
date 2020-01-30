@@ -12,6 +12,11 @@ public class HandshakeState {
     return []
   }
   public func split() -> (CipherState, CipherState) {
-    return (CipherState(), CipherState())
+    // TODO fix this...
+    let key = Array("01234567012345670123456701234567".utf8)
+    return (
+      try! CipherState(key: key),
+      try! CipherState(key: key)
+    )
   }
 }
