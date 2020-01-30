@@ -1,3 +1,3 @@
 # NoiseProtocol
 
-A description of this package.
+Noise protocol implemented with Swift.

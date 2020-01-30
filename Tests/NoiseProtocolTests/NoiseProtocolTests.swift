@@ -1,47 +1,32 @@
 import XCTest
-import class Foundation.Bundle
+import NoiseProtocol
 
 final class NoiseProtocolTests: XCTestCase {
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
+  static var allTests = [
+    ("testKK", testKK),
+  ]
 
-        // Some of the APIs that we use below are available in macOS 10.13 and above.
-        guard #available(macOS 10.13, *) else {
-            return
-        }
+  func testKK() throws {
+    let clientStaticKeyPair = generateKeyPair()
+    let serverStaticKeyPair = generateKeyPair()
 
-        let fooBinary = productsDirectory.appendingPathComponent("NoiseProtocol")
+    let clientState = HandshakeState(pattern: .KK, initiator: true, s: clientStaticKeyPair, rs: serverStaticKeyPair.publicKey)
+    let serverState = HandshakeState(pattern: .KK, initiator: false, s: serverStaticKeyPair, rs: clientStaticKeyPair.publicKey)
 
-        let process = Process()
-        process.executableURL = fooBinary
+    // -> e, es, ss
+    let clientTx = clientState.writeMessage(payload: Array("".utf8))
+    serverState.readMessage(message: clientTx)
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
+    // <- e, ee, se
+    let serverTx = serverState.writeMessage(payload: Array("".utf8))
+    clientState.readMessage(message: serverTx)
 
-        try process.run()
-        process.waitUntilExit()
+    let serverSplits = serverState.split()
+    let clientSplits = clientState.split()
 
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8)
-
-        XCTAssertEqual(output, "Hello, world!\n")
-    }
-
-    /// Returns path to the built products directory.
-    var productsDirectory: URL {
-      #if os(macOS)
-        for bundle in Bundle.allBundles where bundle.bundlePath.hasSuffix(".xctest") {
-            return bundle.bundleURL.deletingLastPathComponent()
-        }
-        fatalError("couldn't find the products directory")
-      #else
-        return Bundle.main.bundleURL
-      #endif
-    }
-
-    static var allTests = [
-        ("testExample", testExample),
-    ]
+    print(serverSplits.0)
+    print(serverSplits.1)
+    print(clientSplits.0)
+    print(clientSplits.1)
+  }
 }

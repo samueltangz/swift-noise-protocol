@@ -1,7 +1,6 @@
 import XCTest
+@testable import NoiseProtocolTests
 
-import NoiseProtocolTests
-
-var tests = [XCTestCaseEntry]()
-tests += NoiseProtocolTests.allTests()
-XCTMain(tests)
+XCTMain([
+  testCase(NoiseProtocolTests.allTests)
+])
