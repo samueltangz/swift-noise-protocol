@@ -2,12 +2,39 @@
   "object": {
     "pins": [
       {
+        "package": "CCurve25519",
+        "repositoryURL": "https://github.com/christophhagen/CCurve25519",
+        "state": {
+          "branch": null,
+          "revision": "f27fa9a2cf0c61a3cb9d9a03b3d3d801ccc64b32",
+          "version": "1.0.4"
+        }
+      },
+      {
+        "package": "CEd25519",
+        "repositoryURL": "https://github.com/christophhagen/CEd25519",
+        "state": {
+          "branch": null,
+          "revision": "9c24d886a9bbc940da973953abb7b2cca02e5d9d",
+          "version": "0.0.6"
+        }
+      },
+      {
         "package": "Clibsodium",
         "repositoryURL": "https://github.com/tiwoc/Clibsodium.git",
         "state": {
           "branch": null,
           "revision": "2ac72772aae26b2da0b15c253d9bb79ba452f66a",
           "version": "1.0.0"
+        }
+      },
+      {
+        "package": "CryptoKit25519",
+        "repositoryURL": "https://github.com/christophhagen/CryptoKit25519",
+        "state": {
+          "branch": null,
+          "revision": "d1feb6533039fedc36a4004bd32b328f18a7e653",
+          "version": "0.4.2"
         }
       },
       {

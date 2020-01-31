@@ -1,4 +1,10 @@
+import Foundation
 import Sodium
+
+extension Sequence where Element == UInt8 {
+    var data: Data { .init(self) }
+    var hexa: String { map { .init(format: "%02x", $0) }.joined() }
+}
 
 // Noise_X_25519_AESGCM_SHA256 (not passed yet)
 // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L248
@@ -15,6 +21,7 @@ func testX() {
   let serverEphemeralKeyPair = KeyPair(
     publicKey: Array<UInt8>.init(hex: "9c1e3f8f295e2baa0382f970b9cbc2cb0c18066f7f6ad44e97ddb68b212d5121"),
     secretKey: Array<UInt8>.init(hex: "c99e75600766e8ec8de995b4b00085c3b90387191b3c1568ca20867761fa65e8"))
+
   let prologue = Array<UInt8>.init(
     hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 
@@ -45,8 +52,8 @@ func testX() {
 
   let ciphertext0b = Array<UInt8>.init(hex: "6f8eaa3373069db1383b3ca7a697a54d4543e8c4ba086e4b4b6052147c40c87c95c86a7f909f2fa0141a00a6708349dd80fa5349c42257dc3581a6156a383cb8a13bcdc99a50fec8f458225bd799839b63482c4fa2167aae247fc49966712890c8d566e78fddc01f6ae2bfa6a096ec8fd788a02b5bfcfb8f6060c6cfb9647680")
 
-  print(clientTx)
-  print(ciphertext0b)
+  print(clientTx.hexa)
+  print(ciphertext0b.hexa)
   assert(clientTx == ciphertext0b)
 }
 
@@ -103,11 +110,11 @@ func testKK() {
   let ciphertext0b = Array<UInt8>.init(hex: "32ca8ed53e4a68e52ecda4d0160bd8c6d22e736b28cee8d151c2c52e37a3123ee45510fd8c5f8caa63d7394d9dfe97fd40b22ec4b7bf0ea360c9f58a22a06e7ee1af57389c2651ee93e82d38ca1be1fc")
   let ciphertext1b = Array<UInt8>.init(hex: "6571c26d443f64388cb42967e73d4b09d9f496586d87f2517ec73507b4bd54579bc86e337166ca0b985745a18ba002eb0ed778e1ce2e9389d1095f3e6a14dccae295a8edb489c6b9b91ffd72d8bbe94a")
 
-  print(clientTx)
-  print(ciphertext0b)
+  print(clientTx.hexa)
+  print(ciphertext0b.hexa)
   print()
-  print(serverTx)
-  print(ciphertext1b)
+  print(serverTx.hexa)
+  print(ciphertext1b.hexa)
   assert(clientTx == ciphertext0b)
   assert(serverTx == ciphertext1b)
 }
@@ -164,15 +171,53 @@ func testIK() {
   let ciphertext0b = Array<UInt8>.init(hex: "72e3811d48022216bb2695f7dbd8cb9c0d9e954147ffe6fe96822d63bbcd3164a8d64f8886104f56ede0c7f35e5d13f27b0607a2693f9e2899b24fe0eae8101cbfcca90a9a50657429ade64223af6e2c660f2c00e512a5cbdbc0de0ce9c62ab0cbe98e348a61fd113c576a75aedf3ee5227be8327b2dccb343ad05523f961298")
   let ciphertext1b = Array<UInt8>.init(hex: "1b690be6976fc8d2e9c687be8ff298637f90f59ea34af404c53578fd3a73804668fc97497b2085820ce1f62a0d9a0a0378f9544ae492be9e7b9219603404cfcb85cccdce9f6d946b1ccce04cfaab9df1")
 
-  print(clientTx)
-  print(ciphertext0b)
+  print(clientTx.hexa)
+  print(ciphertext0b.hexa)
   print()
-  print(serverTx)
-  print(ciphertext1b)
+  print(serverTx.hexa)
+  print(ciphertext1b.hexa)
   assert(clientTx == ciphertext0b)
   assert(serverTx == ciphertext1b)
 }
 
-// testX()
+testX()
 // testKK()
-testIK()
+// testIK()
+
+// let alicePublic = Data([
+//     0x1b, 0xb7, 0x59, 0x66, 0xf2, 0xe9, 0x3a, 0x36, 0x91, 0xdf, 0xff, 0x94, 0x2b, 0xb2, 0xa4, 0x66,
+//     0xa1, 0xc0, 0x8b, 0x8d, 0x78, 0xca, 0x3f, 0x4d, 0x6d, 0xf8, 0xb8, 0xbf, 0xa2, 0xe4, 0xee, 0x28])
+
+// // let alicePrivate = Data([
+// //     0xc8, 0x06, 0x43, 0x9d, 0xc9, 0xd2, 0xc4, 0x76, 0xff, 0xed, 0x8f, 0x25, 0x80, 0xc0, 0x88, 0x8d,
+// //     0x58, 0xab, 0x40, 0x6b, 0xf7, 0xae, 0x36, 0x98, 0x87, 0x90, 0x21, 0xb9, 0x6b, 0xb4, 0xbf, 0x59])
+// let alicePrivate = Data(Array<UInt8>.init(hex: "c806439dc9d2c476ffed8f2580c0888d58ab406bf7ae3698879021b96bb4bf59"))
+
+// let basepoint = Data([9]) + Data(repeating: 0, count: 31)
+
+// let p = try! Curve25519.calculateAgreement(privateKey: alicePrivate, publicKey: basepoint)
+// print(Array(basepoint))
+// print(Array(alicePrivate))
+// print(Array(p))
+
+
+
+// let pk1 = Data([30, 222, 35, 48, 128, 169, 48, 95, 101, 138, 236, 237, 7, 239, 4, 206, 211, 112, 181, 241, 187, 160, 153, 179, 171, 195, 158, 199, 180, 245, 168, 63])
+// // let sk2 = Data([245, 135, 213, 255, 17, 6, 104, 24, 230, 166, 133, 160, 91, 230, 119, 240, 97, 136, 55, 180, 2, 113, 236, 5, 139, 28, 29, 157, 203, 227, 52, 111])
+// // let ok1 = Data([8, 119, 36, 23, 244, 210, 24, 38, 74, 106, 66, 80, 34, 130, 174, 67, 226, 146, 70, 94, 197, 5, 104, 241, 209, 102, 67, 102, 11, 40, 178, 4])
+
+// // let pk2 = Data([111, 142, 170, 51, 115, 6, 157, 177, 56, 59, 60, 167, 166, 151, 165, 77, 69, 67, 232, 196, 186, 8, 110, 75, 75, 96, 82, 20, 124, 64, 200, 124])
+// let sk1 = Data([75, 157, 102, 134, 12, 57, 222, 49, 73, 43, 219, 59, 9, 5, 39, 191, 102, 239, 30, 167, 95, 16, 91, 182, 248, 115, 40, 223, 187, 159, 227, 55])
+// // let ok2 = Data([219, 5, 125, 29, 36, 238, 164, 251, 128, 4, 161, 27, 20, 38, 161, 204, 47, 223, 17, 4, 2, 27, 44, 120, 33, 149, 239, 166, 16, 87, 197, 66])
+
+// // let sk1 = Data([0xc8, 0x06, 0x43, 0x9d, 0xc9, 0xd2, 0xc4, 0x76, 0xff, 0xed, 0x8f, 0x25, 0x80, 0xc0, 0x88, 0x8d, 0x58, 0xab, 0x40, 0x6b, 0xf7, 0xae, 0x36, 0x98, 0x87, 0x90, 0x21, 0xb9, 0x6b, 0xb4, 0xbf, 0x59])
+// // let pk1 = Data([0x1b, 0xb7, 0x59, 0x66, 0xf2, 0xe9, 0x3a, 0x36, 0x91, 0xdf, 0xff, 0x94, 0x2b, 0xb2, 0xa4, 0x66, 0xa1, 0xc0, 0x8b, 0x8d, 0x78, 0xca, 0x3f, 0x4d, 0x6d, 0xf8, 0xb8, 0xbf, 0xa2, 0xe4, 0xee, 0x28])
+// // let ok1b = try! Curve25519.calculateAgreement(privateKey: sk1, publicKey: pk2)
+// // let ok2b = try! Curve25519.calculateAgreement(privateKey: sk2, publicKey: pk1)
+
+// let g = Data([9]) + Data(repeating: 0, count: 31)
+
+// let pk1b = try! Curve25519.calculateAgreement(privateKey: sk1, publicKey: g)
+
+// print(Array(pk1))
+// print(Array(pk1b))

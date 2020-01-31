@@ -110,6 +110,7 @@ public class HandshakeState {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
+    print(protocolName) // STODO
     self.symmetricState = SymmetricState(protocolName: protocolName)
 
     // Calls MixHash(prologue).
@@ -134,6 +135,7 @@ public class HandshakeState {
     }
 
     for token in patternDetails!.initiatorPremessages {
+      print(self.initiator, token, "initiator premessages (STODO")
       switch token {
         case .s:
           let s = try getStaticKey(s: self.s, rs: self.rs, own: self.initiator)
@@ -147,6 +149,7 @@ public class HandshakeState {
     }
 
     for token in patternDetails!.responderPremessages {
+      print(self.initiator, token, "responder premessages (STODO")
       switch token {
         case .s:
           let s = try getStaticKey(s: self.s, rs: self.rs, own: !self.initiator)
@@ -173,6 +176,7 @@ public class HandshakeState {
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
+      print(self.initiator, token, "write message (STODO")
       switch token {
         // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
         // buffer. Calls MixHash(e.public_key).
@@ -270,6 +274,7 @@ public class HandshakeState {
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
+      print(self.initiator, token, "read message (STODO")
       switch token {
         // For "e": Sets re (which must be empty) to the next DHLEN bytes from the message. Calls
         // MixHash(re.public_key).

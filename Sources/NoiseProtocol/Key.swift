@@ -5,9 +5,23 @@ public func generateKeyPair() -> KeyPair {
   return sodium.box.keyPair()!
 }
 
+import CryptoKit25519
+import Foundation
+
 public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> [UInt8] {
-  let sodium = Sodium()
-  return sodium.box.beforenm(recipientPublicKey: publicKey, senderSecretKey: keyPair.secretKey)!
+  let privateKey = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(keyPair.secretKey))
+  let publicKeyObj = try! Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
+  let sharedKey = try! privateKey.sharedSecretFromKeyAgreement(with: publicKeyObj)
+  print(sharedKey)
+  print(privateKey.publicKey)
+  return Array(sharedKey.rawData)
+
+  // let sodium = Sodium()
+  // let sharedKey = sodium.box.beforenm(recipientPublicKey: publicKey, senderSecretKey: keyPair.secretKey)!
+  // print("1. pk", publicKey)
+  // print("2. sk", keyPair.secretKey)
+  // print("sharedKey", sharedKey)
+  // return sharedKey
 }
 
 import CryptoSwift
