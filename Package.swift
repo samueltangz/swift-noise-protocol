@@ -8,7 +8,6 @@ let package = Package(
   dependencies: [
     // Dependencies declare other packages that this package depends on.
     .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.3.0"),
-    .package(url: "https://github.com/IBM-Swift/BlueECC.git", from: "1.2.5"),
     .package(url: "https://github.com/jedisct1/swift-sodium.git", from: "0.8.0")
   ],
   targets: [
@@ -18,7 +17,6 @@ let package = Package(
       name: "NoiseProtocol",
       dependencies: [
         "CryptoSwift",
-        "CryptorECC",
         "Sodium"
       ]),
     .testTarget(

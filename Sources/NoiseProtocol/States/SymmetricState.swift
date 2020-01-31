@@ -9,6 +9,8 @@ public class SymmetricState {
   var cipherState: CipherState
 
   init(protocolName: String) {
+    // TODO: this
+
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
     // Otherwise sets h = HASH(protocol_name).

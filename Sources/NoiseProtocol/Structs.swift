@@ -1,7 +1,8 @@
 import Sodium
 
-public typealias PublicKey = Box.KeyPair.PublicKey
 public typealias KeyPair = Box.KeyPair
+public typealias PublicKey = Box.KeyPair.PublicKey
+public typealias SecretKey = Box.KeyPair.SecretKey
 
 enum NonceError: Error {
   case nonceOverflow

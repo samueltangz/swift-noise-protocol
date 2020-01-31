@@ -5,6 +5,11 @@ public func generateKeyPair() -> KeyPair {
   return sodium.box.keyPair()!
 }
 
+public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> [UInt8] {
+  let sodium = Sodium()
+  return sodium.box.beforenm(recipientPublicKey: publicKey, senderSecretKey: keyPair.secretKey)!
+}
+
 import CryptoSwift
 
 func hkdf2(chainingKey: [UInt8], inputKeyMaterial: [UInt8]) throws -> ([UInt8], [UInt8]) {

@@ -41,7 +41,7 @@ public class CipherState {
     if !self.hasKey() {
       return ciphertext
     }
-    let plaintext = try! decrypt(k: self.k!, n: self.n, ad: ad, ciphertextWithTag: ciphertext)
+    let plaintext = try! decrypt(k: self.k!, n: self.n, ad: ad, ciphertext: ciphertext)
     try! self.n.increment()
     return plaintext
   }
