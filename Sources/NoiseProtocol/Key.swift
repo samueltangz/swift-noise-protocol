@@ -13,16 +13,16 @@ public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> [UInt8] {
 import CryptoSwift
 
 func hkdf2(chainingKey: [UInt8], inputKeyMaterial: [UInt8]) throws -> ([UInt8], [UInt8]) {
-  let tempKey = try HKDF(password: chainingKey, salt: inputKeyMaterial).calculate()
-  let output1 = try HKDF(password: tempKey, salt: [1]).calculate()
-  let output2 = try HKDF(password: tempKey, salt: output1 + [2]).calculate()
+  let tempKey = try HMAC(key: chainingKey, variant: .sha256).authenticate(inputKeyMaterial)
+  let output1 = try HMAC(key: tempKey, variant: .sha256).authenticate([1])
+  let output2 = try HMAC(key: tempKey, variant: .sha256).authenticate(output1 + [2])
   return (output1, output2)
 }
 
 func hkdf3(chainingKey: [UInt8], inputKeyMaterial: [UInt8]) throws -> ([UInt8], [UInt8], [UInt8]) {
-  let tempKey = try HKDF(password: chainingKey, salt: inputKeyMaterial).calculate()
-  let output1 = try HKDF(password: tempKey, salt: [1]).calculate()
-  let output2 = try HKDF(password: tempKey, salt: output1 + [2]).calculate()
-  let output3 = try HKDF(password: tempKey, salt: output2 + [3]).calculate()
+  let tempKey = try HMAC(key: chainingKey, variant: .sha256).authenticate(inputKeyMaterial)
+  let output1 = try HMAC(key: tempKey, variant: .sha256).authenticate([1])
+  let output2 = try HMAC(key: tempKey, variant: .sha256).authenticate(output1 + [2])
+  let output3 = try HMAC(key: tempKey, variant: .sha256).authenticate(output2 + [3])
   return (output1, output2, output3)
 }

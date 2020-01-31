@@ -9,12 +9,15 @@ public class SymmetricState {
   var cipherState: CipherState
 
   init(protocolName: String) {
-    // TODO: this
-
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
     // Otherwise sets h = HASH(protocol_name).
-    self.h = Digest.sha256(Array(protocolName.utf8))
+    let h = Array(protocolName.utf8)
+    if h.count <= 32 {
+      self.h = h + Array(repeating: 0, count: 32-h.count)
+    } else {
+      self.h = Digest.sha256(h)
+    }
     // Sets ck = h.
     self.ck = self.h
     // Calls InitializeKey(empty).
@@ -37,9 +40,10 @@ public class SymmetricState {
   func mixKeyAndHash(inputKeyMaterial: [UInt8]) {
     // Sets ck, temp_h, temp_k = HKDF(ck, input_key_material, 3).
     let (ck, tempH, tempK) = try! hkdf3(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
+    self.ck = ck
 
     // Calls MixHash(temp_h).
-    mixHash(data: tempH)
+    self.mixHash(data: tempH)
 
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
 
@@ -53,12 +57,16 @@ public class SymmetricState {
   func encryptAndHash(plaintext: [UInt8]) -> [UInt8] {
     // Sets ciphertext = EncryptWithAd(h, plaintext), calls MixHash(ciphertext), and returns ciphertext.
     // Note that if k is empty, the EncryptWithAd() call will set ciphertext equal to plaintext.
-    return self.cipherState.encryptWithAd(ad: self.h, plaintext: plaintext)
+    let ciphertext = self.cipherState.encryptWithAd(ad: self.h, plaintext: plaintext)
+    self.mixHash(data: ciphertext)
+    return ciphertext
   }
   func decryptAndHash(ciphertext: [UInt8]) -> [UInt8] {
     // Sets plaintext = DecryptWithAd(h, ciphertext), calls MixHash(ciphertext), and returns plaintext.
     // Note that if k is empty, the DecryptWithAd() call will set plaintext equal to ciphertext.
-    return self.cipherState.decryptWithAd(ad: self.h, ciphertext: ciphertext)
+    let plaintext = self.cipherState.decryptWithAd(ad: self.h, ciphertext: ciphertext)
+    self.mixHash(data: ciphertext)
+    return plaintext
   }
   func split() -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).

@@ -287,21 +287,13 @@ public class HandshakeState {
           if self.rs != nil {
             throw HandshakeStateError.staticKeyAlreadyExist
           }
-          if self.symmetricState.cipherState.hasKey() {
-            if message.count < 48 {
-              throw HandshakeStateError.messageTooShort
-            }
-            let rs = PublicKey(self.symmetricState.decryptAndHash(ciphertext: Array(messageBuffer[..<48])))
-            messageBuffer = Array(messageBuffer[48...])
-            self.rs = rs
-          } else {
-            if message.count < 32 {
-              throw HandshakeStateError.messageTooShort              
-            }
-            let rs = PublicKey(messageBuffer[..<32])
-            messageBuffer = Array(messageBuffer[32...])
-            self.rs = rs
+          let size = self.symmetricState.cipherState.hasKey() ? 48 : 32
+          if message.count < size {
+            throw HandshakeStateError.messageTooShort
           }
+          let rs = PublicKey(self.symmetricState.decryptAndHash(ciphertext: Array(messageBuffer[..<size])))
+          messageBuffer = Array(messageBuffer[size...])
+          self.rs = rs
         // For "ee": Calls MixKey(DH(e, re)).
         case .ee:
           if self.e == nil {
@@ -365,7 +357,7 @@ public class HandshakeState {
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    return []
+    return self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
   }
 
   func split() throws -> (CipherState, CipherState) {
