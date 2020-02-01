@@ -14,9 +14,11 @@ enum HandshakeStateError: Error {
 }
 
 public enum HandshakePattern: String {
+  case N
   case X
   case IK
   case KK
+  case KN
 }
 
 public enum Token {
@@ -36,6 +38,13 @@ struct HandshakePatternDetails {
 
 // TODO: PSK
 let patterns: [HandshakePattern: HandshakePatternDetails] = [
+  .N: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [ .s ],
+    messagePatterns: [
+      [ .e, .es ]
+    ]
+  ),
   .X: HandshakePatternDetails(
     initiatorPremessages: [],
     responderPremessages: [ .s ],
@@ -58,7 +67,15 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .es, .ss ],
       [ .e, .ee, .se ]
     ]
-  )
+  ),
+  .KN: HandshakePatternDetails(
+    initiatorPremessages: [ .s ],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
+      [ .e, .ee, .se ]
+    ]
+  ),
 ]
 
 func getStaticKey(s: KeyPair?, rs: PublicKey?, own: Bool) throws -> PublicKey {
@@ -135,7 +152,6 @@ public class HandshakeState {
     }
 
     for token in patternDetails!.initiatorPremessages {
-      print(self.initiator, token, "initiator premessages (STODO")
       switch token {
         case .s:
           let s = try getStaticKey(s: self.s, rs: self.rs, own: self.initiator)
@@ -149,7 +165,6 @@ public class HandshakeState {
     }
 
     for token in patternDetails!.responderPremessages {
-      print(self.initiator, token, "responder premessages (STODO")
       switch token {
         case .s:
           let s = try getStaticKey(s: self.s, rs: self.rs, own: !self.initiator)
@@ -166,6 +181,7 @@ public class HandshakeState {
     self.messagePatterns = patternDetails!.messagePatterns
   }
   public func writeMessage(payload: [UInt8]) throws -> [UInt8] {
+    print(self.initiator, "START WRITE")
     if self.messagePatterns.count == 0 {
       throw HandshakeStateError.completedHandshake
     }
@@ -261,9 +277,11 @@ public class HandshakeState {
     out.append(self.symmetricState.encryptAndHash(plaintext: payload))
 
     // If there are no more message patterns returns two new CipherState objects by calling Split().
+    print(self.initiator, "END WRITE")
     return out.reduce([], +)
   }
   public func readMessage(message: [UInt8]) throws -> [UInt8] {
+    print(self.initiator, "START READ")
     if self.messagePatterns.count == 0 {
       throw HandshakeStateError.completedHandshake
     }
@@ -362,6 +380,7 @@ public class HandshakeState {
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().
+    print(self.initiator, "END READ")
     return self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
   }
 

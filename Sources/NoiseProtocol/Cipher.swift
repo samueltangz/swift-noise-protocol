@@ -2,6 +2,7 @@ import CryptoSwift
 
 func nonceToUInt8Array(n: Nonce) -> Array<UInt8> {
   return [
+    0, 0, 0, 0,
     UInt8(truncatingIfNeeded: n>>56),
     UInt8(truncatingIfNeeded: n>>48),
     UInt8(truncatingIfNeeded: n>>40),
