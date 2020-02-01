@@ -26,7 +26,7 @@ public class CipherState {
     // Sets n = nonce.
     self.n = nonce
   }
-  func encryptWithAd(ad: [UInt8], plaintext: [UInt8]) -> [UInt8] {
+  public func encryptWithAd(ad: [UInt8], plaintext: [UInt8]) -> [UInt8] {
     // If k is non-empty returns ENCRYPT(k, n++, ad, plaintext). Otherwise returns plaintext.
     if !self.hasKey() {
       return plaintext
@@ -35,7 +35,7 @@ public class CipherState {
     try! self.n.increment()
     return ciphertext
   }
-  func decryptWithAd(ad: [UInt8], ciphertext: [UInt8]) -> [UInt8] {
+  public func decryptWithAd(ad: [UInt8], ciphertext: [UInt8]) -> [UInt8] {
     // If k is non-empty returns DECRYPT(k, n++, ad, ciphertext). Otherwise returns ciphertext.
     // If an authentication failure occurs in DECRYPT() then n is not incremented and an error is signaled to the caller.
     if !self.hasKey() {

@@ -1,13 +1,3 @@
-import Foundation
-import Sodium
-import CryptoKit25519
-
-func constructKeyPair(secretKey: SecretKey) -> KeyPair {
-  let secretKeyObj = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: secretKey)))
-  let publicKey = Array(secretKeyObj.publicKey.rawRepresentation)
-  return KeyPair(publicKey: publicKey, secretKey: secretKey)
-}
-
 // Noise_N_25519_AESGCM_SHA256
 // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L106
 func testN() {

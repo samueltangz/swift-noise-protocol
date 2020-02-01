@@ -36,7 +36,6 @@ struct HandshakePatternDetails {
   var messagePatterns: [[Token]]
 }
 
-// TODO: PSK
 let patterns: [HandshakePattern: HandshakePatternDetails] = [
   .N: HandshakePatternDetails(
     initiatorPremessages: [],
@@ -122,6 +121,15 @@ public class HandshakeState {
   // from the set ("e", "s", "ee", "es", "se", "ss").
   var messagePatterns: [[Token]]
   var symmetricState: SymmetricState
+
+  #if DEBUG
+  public var remoteS: PublicKey? {
+    get { return rs }
+  }
+  public var remoteE: PublicKey? {
+    get { return re }
+  }
+  #endif
 
   public init(pattern: HandshakePattern, initiator: Bool, prologue: [UInt8] = [], s: KeyPair? = nil, e: KeyPair? = nil, rs: PublicKey? = nil, re: PublicKey? = nil) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
@@ -377,7 +385,7 @@ public class HandshakeState {
     return self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
   }
 
-  func split() throws -> (CipherState, CipherState) {
+  public func split() throws -> (CipherState, CipherState) {
     if self.messagePatterns.count > 0 {
       throw HandshakeStateError.incompleteHandshake
     }

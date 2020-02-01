@@ -2,6 +2,37 @@
 
 Noise protocol implemented with Swift.
 
+## Installation
+
+### Swift Package Manager
+
+Add the following lines to `Package.swift`.
+
+```swift
+dependencies: [
+  ...,
+  .package(url: "https://github.com/samueltangz/swift-noise-protocol.git", from: "0.1.0")
+  ...
+],
+targets: (
+  ...
+  dependencies: [
+    ...,
+    "NoiseProtocol",
+    ...
+  ],
+  ...
+)
+```
+
+### Import package
+
+```swift
+import NoiseProtocol
+```
+
+
+
 ## Supported features
 
 ### DH functions, cipher functions, and hash functions
