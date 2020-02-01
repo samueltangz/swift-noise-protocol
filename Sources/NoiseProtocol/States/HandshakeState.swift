@@ -127,7 +127,6 @@ public class HandshakeState {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
-    print(protocolName) // STODO
     self.symmetricState = SymmetricState(protocolName: protocolName)
 
     // Calls MixHash(prologue).
@@ -181,7 +180,6 @@ public class HandshakeState {
     self.messagePatterns = patternDetails!.messagePatterns
   }
   public func writeMessage(payload: [UInt8]) throws -> [UInt8] {
-    print(self.initiator, "START WRITE")
     if self.messagePatterns.count == 0 {
       throw HandshakeStateError.completedHandshake
     }
@@ -192,7 +190,6 @@ public class HandshakeState {
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
-      print(self.initiator, token, "write message (STODO")
       switch token {
         // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
         // buffer. Calls MixHash(e.public_key).
@@ -277,11 +274,9 @@ public class HandshakeState {
     out.append(self.symmetricState.encryptAndHash(plaintext: payload))
 
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    print(self.initiator, "END WRITE")
     return out.reduce([], +)
   }
   public func readMessage(message: [UInt8]) throws -> [UInt8] {
-    print(self.initiator, "START READ")
     if self.messagePatterns.count == 0 {
       throw HandshakeStateError.completedHandshake
     }
@@ -292,7 +287,6 @@ public class HandshakeState {
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
-      print(self.initiator, token, "read message (STODO")
       switch token {
         // For "e": Sets re (which must be empty) to the next DHLEN bytes from the message. Calls
         // MixHash(re.public_key).
@@ -380,7 +374,6 @@ public class HandshakeState {
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    print(self.initiator, "END READ")
     return self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
   }
 
