@@ -81,37 +81,40 @@ The handshake patterns defined in [session 7 of the specification](https://noise
 The following is an example usage for Noise with `Noise_X_25519_AESGCM_SHA256`.
 
 ```swift
-let initiatorStaticKeyPair = generateKeyPair()
 let responderStaticKeyPair = generateKeyPair()
 let initiatorEphemeralKeyPair = generateKeyPair()
 let responderEphemeralKeyPair = generateKeyPair()
 
+let prologue = Data()
+
 let initiatorState = try! HandshakeState(
-  pattern: .X,
+  pattern: .N,
   initiator: true,
-  s: initiatorStaticKeyPair,
+  prologue: prologue,
   e: initiatorEphemeralKeyPair,
   rs: responderStaticKeyPair.publicKey
 )
 let responderState = try! HandshakeState(
-  pattern: .X,
+  pattern: .N,
   initiator: false,
+  prologue: prologue,
   s: responderStaticKeyPair,
   e: responderEphemeralKeyPair
 )
 
-// -> e, es, s, ss
-let initiatorTx = try! initiatorState.writeMessage(payload: [])
-assert(try! responderState.readMessage(message: initiatorTx) == [])
+// -> e, es
+let initiatorTx = try! initiatorState.writeMessage(payload: Data())
+assert(try! responderState.readMessage(message: initiatorTx) == Data())
+assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
 
 let responderSplits = try! responderState.split()
 let initiatorSplits = try! initiatorState.split()
 
-let plaintext1 = Array("hello world".utf8)
-let ciphertext1 = initiatorSplits.0.encryptWithAd(ad: [], plaintext: plaintext1)
-assert(responderSplits.0.decryptWithAd(ad: [], ciphertext: ciphertext1) == plaintext1)
+let plaintext1 = Data("hello world".utf8)
+let ciphertext1 = initiatorSplits.0.encryptWithAd(ad: Data(), plaintext: plaintext1)
+assert(responderSplits.0.decryptWithAd(ad: Data(), ciphertext: ciphertext1) == plaintext1)
 
-let plaintext2 = Array("hello world, too".utf8)
-let ciphertext2 = responderSplits.1.encryptWithAd(ad: [], plaintext: plaintext2)
-assert(initiatorSplits.1.decryptWithAd(ad: [], ciphertext: ciphertext2) == plaintext2)
+let plaintext2 = Data("hello world, too".utf8)
+let ciphertext2 = responderSplits.1.encryptWithAd(ad: Data(), plaintext: plaintext2)
+assert(initiatorSplits.1.decryptWithAd(ad: Data(), ciphertext: ciphertext2) == plaintext2)
 ```

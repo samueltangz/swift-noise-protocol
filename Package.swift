@@ -25,7 +25,7 @@ let package = Package(
         "CryptoKit25519"
       ]),
     .testTarget(
-      name: "SwiftNoiseTest",
+      name: "SwiftNoiseTests",
       dependencies: [
         "SwiftNoise"
       ]),
