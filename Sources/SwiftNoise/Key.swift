@@ -22,26 +22,26 @@ func normalize(secretKey: SecretKey) -> SecretKey {
   return newSecretKey
 }
 
-public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> [UInt8] {
+public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> Data {
   let secretKeyObj = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
   let publicKeyObj = try! Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
   let sharedKey = try! secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
-  return Array(sharedKey.rawData)
+  return sharedKey.rawData
 }
 
 import CryptoSwift
 
-func hkdf2(chainingKey: [UInt8], inputKeyMaterial: [UInt8]) throws -> ([UInt8], [UInt8]) {
-  let tempKey = try HMAC(key: chainingKey, variant: .sha256).authenticate(inputKeyMaterial)
+func hkdf2(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data) {
+  let tempKey = try HMAC(key: chainingKey.bytes, variant: .sha256).authenticate(inputKeyMaterial.bytes)
   let output1 = try HMAC(key: tempKey, variant: .sha256).authenticate([1])
   let output2 = try HMAC(key: tempKey, variant: .sha256).authenticate(output1 + [2])
-  return (output1, output2)
+  return (Data(output1), Data(output2))
 }
 
-func hkdf3(chainingKey: [UInt8], inputKeyMaterial: [UInt8]) throws -> ([UInt8], [UInt8], [UInt8]) {
-  let tempKey = try HMAC(key: chainingKey, variant: .sha256).authenticate(inputKeyMaterial)
+func hkdf3(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data, Data) {
+  let tempKey = try HMAC(key: chainingKey.bytes, variant: .sha256).authenticate(inputKeyMaterial.bytes)
   let output1 = try HMAC(key: tempKey, variant: .sha256).authenticate([1])
   let output2 = try HMAC(key: tempKey, variant: .sha256).authenticate(output1 + [2])
   let output3 = try HMAC(key: tempKey, variant: .sha256).authenticate(output2 + [3])
-  return (output1, output2, output3)
+  return (Data(output1), Data(output2), Data(output3))
 }

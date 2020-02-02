@@ -1,4 +1,4 @@
-# NoiseProtocol
+# SwiftNoise
 
 Noise protocol implemented with Swift.
 
@@ -18,7 +18,7 @@ targets: (
   ...
   dependencies: [
     ...,
-    "NoiseProtocol",
+    "SwiftNoise",
     ...
   ],
   ...
@@ -28,7 +28,7 @@ targets: (
 ### Import package
 
 ```swift
-import NoiseProtocol
+import SwiftNoise
 ```
 
 

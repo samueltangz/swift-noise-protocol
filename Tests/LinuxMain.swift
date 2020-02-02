@@ -1,6 +1,6 @@
 import XCTest
-@testable import NoiseProtocolTests
+@testable import SwiftNoiseTests
 
 XCTMain([
-  testCase(NoiseProtocolTests.allTests)
+  testCase(SwiftNoiseTests.allTests)
 ])

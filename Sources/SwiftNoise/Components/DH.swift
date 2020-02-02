@@ -1,3 +1,5 @@
+import Foundation
+
 // https://noiseprotocol.org/noise.html#dh-functions
 protocol DiffieHellman {
   // Generates a new Diffie-Hellman key pair. A DH key pair consists of public_key and private_key
@@ -13,7 +15,7 @@ protocol DiffieHellman {
   // handle invalid public keys either by returning some output which is purely a function of the
   // public key and does not depend on the private key, or by signaling an error to the caller. The
   // DH function may define more specific rules for handling invalid values.
-  func dh(keyPair: KeyPair, publicKey: PublicKey) -> [UInt8]
+  func dh(keyPair: KeyPair, publicKey: PublicKey) -> Data
 
   // = A constant specifying the size in bytes of public keys and DH outputs. For security reasons,
   // DHLEN must be 32 or greater.

@@ -1,10 +1,11 @@
+import Foundation
 import CryptoSwift
 
 // https://noiseprotocol.org/noise.html#hash-functions
 protocol Hash {
   // Hashes some arbitrary-length data with a collision-resistant cryptographic hash function and
   // returns an output of HASHLEN bytes.
-  func hash(data: [UInt8]) -> [UInt8]
+  func hash(data: Data) -> Data
 
   // = A constant specifying the size in bytes of the hash output. Must be 32 or 64.
   var hashlen: Int { get }
@@ -18,8 +19,8 @@ protocol Hash {
 }
 
 class SHA256: Hash {
-  func hash(data: [UInt8]) -> [UInt8] {
-    return Digest.sha256(data)
+  func hash(data: Data) -> Data {
+    return Data(Digest.sha256(data.bytes))
   }
   var hashlen: Int = 32
   var blocklen: Int = 64

@@ -1,7 +1,7 @@
 import XCTest
-import NoiseProtocol
+import SwiftNoise
 
-final class NoiseProtocolTests: XCTestCase {
+final class SwiftNoiseTests: XCTestCase {
   static var allTests = [
     ("testN", testN),
     ("testX", testX),
