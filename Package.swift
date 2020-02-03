@@ -11,7 +11,6 @@ let package = Package(
   dependencies: [
     // Dependencies declare other packages that this package depends on.
     .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.3.0"),
-    .package(url: "https://github.com/jedisct1/swift-sodium.git", from: "0.8.0"),
     .package(url: "https://github.com/christophhagen/CryptoKit25519", from: "0.4.0")
   ],
   targets: [
@@ -21,7 +20,6 @@ let package = Package(
       name: "SwiftNoise",
       dependencies: [
         "CryptoSwift",
-        "Sodium",
         "CryptoKit25519"
       ]),
     .testTarget(

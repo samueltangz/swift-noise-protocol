@@ -1,18 +1,17 @@
-import Sodium
+import Foundation
+import CryptoKit25519
 
 public func constructKeyPair(secretKey: SecretKey) -> KeyPair {
   let secretKeyObj = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: secretKey)))
-  let publicKey = Array(secretKeyObj.publicKey.rawRepresentation)
+  let publicKey = secretKeyObj.publicKey.rawRepresentation
   return KeyPair(publicKey: publicKey, secretKey: secretKey)
 }
 
 public func generateKeyPair() -> KeyPair {
-  let sodium = Sodium()
-  return sodium.box.keyPair()!
+  // using AES.randomIV as a reliable, secure source of random
+  let secretKey = Data(AES.randomIV(32))
+  return constructKeyPair(secretKey: secretKey)
 }
-
-import CryptoKit25519
-import Foundation
 
 func normalize(secretKey: SecretKey) -> SecretKey {
   var newSecretKey = secretKey

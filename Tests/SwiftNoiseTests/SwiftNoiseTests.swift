@@ -14,9 +14,9 @@ final class SwiftNoiseTests: XCTestCase {
   // Noise_N_25519_AESGCM_SHA256
   // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L106
   func testN() {
-    let responderStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "2a1c15dc684bd84612e9b2d84f740c76789042390af00fd02f71ec14dd213231"))
-    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "3b40bcbafac8be41b4e52af1caf6edb1cc6f9f48a1b9579e69a25d6bf66c10cd"))
-    let responderEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "fa96ea6cb4e79f59412fb8fdbe6beac212939840f2f9f1afef0877eae5ff527c"))
+    let responderStaticKeyPair = constructKeyPair(secretKey: Data(hex: "2a1c15dc684bd84612e9b2d84f740c76789042390af00fd02f71ec14dd213231"))
+    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "3b40bcbafac8be41b4e52af1caf6edb1cc6f9f48a1b9579e69a25d6bf66c10cd"))
+    let responderEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "fa96ea6cb4e79f59412fb8fdbe6beac212939840f2f9f1afef0877eae5ff527c"))
 
     let prologue = Data(hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 
@@ -99,10 +99,10 @@ final class SwiftNoiseTests: XCTestCase {
   // Noise_X_25519_AESGCM_SHA256
   // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L248
   func testX() {
-    let initiatorStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "94e7f031803c6ed2acb0eb1528a93c7a1c446eef4b69af38443cf820e69d960e"))
-    let responderStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337"))
-    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "f587d5ff11066818e6a685a05be677f0618837b40271ec058b1c1d9dcbe3346f"))
-    let responderEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "c99e75600766e8ec8de995b4b00085c3b90387191b3c1568ca20867761fa65e8"))
+    let initiatorStaticKeyPair = constructKeyPair(secretKey: Data(hex: "94e7f031803c6ed2acb0eb1528a93c7a1c446eef4b69af38443cf820e69d960e"))
+    let responderStaticKeyPair = constructKeyPair(secretKey: Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337"))
+    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "f587d5ff11066818e6a685a05be677f0618837b40271ec058b1c1d9dcbe3346f"))
+    let responderEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "c99e75600766e8ec8de995b4b00085c3b90387191b3c1568ca20867761fa65e8"))
 
     let prologue = Data(hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 
@@ -147,10 +147,10 @@ final class SwiftNoiseTests: XCTestCase {
   // Noise_IK_25519_AESGCM_SHA256
   // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L2336
   func testIK() {
-    let initiatorStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "834923a2cbc86100d56854892049a7d6afbf2b2231b4450028cfc9b7a1993fb1"))
-    let responderStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "067d24b814b15993f11a68b9270779889ef87b865a4f579bdf138f5a7d69b8d2"))
-    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "9f77df6db1e5fa790cff942e5db226c71375988ab2cfb8193817c1a716f679ed"))
-    let responderEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "68ca5c7901e604433e2ecd950576060c5b002f9fe2edc2eb1d46468601d995eb"))
+    let initiatorStaticKeyPair = constructKeyPair(secretKey: Data(hex: "834923a2cbc86100d56854892049a7d6afbf2b2231b4450028cfc9b7a1993fb1"))
+    let responderStaticKeyPair = constructKeyPair(secretKey: Data(hex: "067d24b814b15993f11a68b9270779889ef87b865a4f579bdf138f5a7d69b8d2"))
+    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "9f77df6db1e5fa790cff942e5db226c71375988ab2cfb8193817c1a716f679ed"))
+    let responderEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "68ca5c7901e604433e2ecd950576060c5b002f9fe2edc2eb1d46468601d995eb"))
 
     let prologue = Data(hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 
@@ -203,10 +203,10 @@ final class SwiftNoiseTests: XCTestCase {
   // Noise_KK_25519_AESGCM_SHA256
   // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L1822
   func testKK() {
-    let initiatorStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "faebb0194fee50fb819b7127c6f4a24dab85af4ac4ebb263eb1a44e8a7f60d41"))
-    let responderStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "fae0883f3bcbb944236fbfeefaaa03427920d940b05c4cd1016070ce7c420c0a"))
-    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "4747e3766bf863acda954fb093d1ed3d438019b9fc1f0dfcbe995d27ea14c825"))
-    let responderEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "772bcda9330c8849a1763365a4faa47f6cf9c0ef8f6d170d41ddff6c0cfb1a37"))
+    let initiatorStaticKeyPair = constructKeyPair(secretKey: Data(hex: "faebb0194fee50fb819b7127c6f4a24dab85af4ac4ebb263eb1a44e8a7f60d41"))
+    let responderStaticKeyPair = constructKeyPair(secretKey: Data(hex: "fae0883f3bcbb944236fbfeefaaa03427920d940b05c4cd1016070ce7c420c0a"))
+    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "4747e3766bf863acda954fb093d1ed3d438019b9fc1f0dfcbe995d27ea14c825"))
+    let responderEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "772bcda9330c8849a1763365a4faa47f6cf9c0ef8f6d170d41ddff6c0cfb1a37"))
 
     let prologue = Data(hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 
@@ -260,9 +260,9 @@ final class SwiftNoiseTests: XCTestCase {
   // Noise_KN_25519_AESGCM_SHA256
   // https://github.com/mcginty/snow/blob/master/tests/vectors/snow.txt#L1822
   func testKN() {
-    let initiatorStaticKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "0af697329178e8280df75138f810feb73fed7955a5dd65f04a4ce6b945a68793"))
-    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "0e2ea3a5ac8634d2842243eeff55550005bc1c621f1048f119d38450ba564fde"))
-    let responderEphemeralKeyPair = constructKeyPair(secretKey: Array<UInt8>.init(hex: "a45a2a9915c2bcbf577226d3428b8d339d483ac19ce5d533603dedbe20811083"))
+    let initiatorStaticKeyPair = constructKeyPair(secretKey: Data(hex: "0af697329178e8280df75138f810feb73fed7955a5dd65f04a4ce6b945a68793"))
+    let initiatorEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "0e2ea3a5ac8634d2842243eeff55550005bc1c621f1048f119d38450ba564fde"))
+    let responderEphemeralKeyPair = constructKeyPair(secretKey: Data(hex: "a45a2a9915c2bcbf577226d3428b8d339d483ac19ce5d533603dedbe20811083"))
 
     let prologue = Data(hex: "5468657265206973206e6f20726967687420616e642077726f6e672e2054686572652773206f6e6c792066756e20616e6420626f72696e672e")
 

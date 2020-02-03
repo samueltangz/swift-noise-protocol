@@ -1,8 +1,12 @@
-import Sodium
+import Foundation
 
-public typealias KeyPair = Box.KeyPair
-public typealias PublicKey = Box.KeyPair.PublicKey
-public typealias SecretKey = Box.KeyPair.SecretKey
+public typealias PublicKey = Data
+public typealias SecretKey = Data
+
+public struct KeyPair {
+  public var publicKey: PublicKey
+  public var secretKey: SecretKey
+}
 
 enum NonceError: Error {
   case nonceOverflow
