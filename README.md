@@ -11,7 +11,7 @@ Add the following lines to `Package.swift`.
 ```swift
 dependencies: [
   ...,
-  .package(url: "https://github.com/samueltangz/swift-noise-protocol.git", from: "0.1.0")
+  .package(url: "https://github.com/samueltangz/swift-noise-protocol.git", from: "0.2.1")
   ...
 ],
 targets: (
