@@ -51,7 +51,7 @@ public class SymmetricState {
     // Calls InitializeKey(temp_k).
     self.cipherState = try! CipherState(key: tempK)
   }
-  public func getHandshakeHash() -> Data {
+  func getHandshakeHash() -> Data {
     // Returns h.
     return self.h
   }

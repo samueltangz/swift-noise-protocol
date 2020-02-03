@@ -84,6 +84,8 @@ final class SwiftNoiseTests: XCTestCase {
     assert(try! responderState.readMessage(message: initiatorTx) == Data())
     assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
 
+    assert(initiatorState.getHandshakeHash() == responderState.getHandshakeHash())
+
     let responderSplits = try! responderState.split()
     let initiatorSplits = try! initiatorState.split()
 

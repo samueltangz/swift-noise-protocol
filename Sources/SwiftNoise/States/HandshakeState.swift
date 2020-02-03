@@ -387,6 +387,10 @@ public class HandshakeState {
     return self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
   }
 
+  public func getHandshakeHash() -> Data {
+    return self.symmetricState.getHandshakeHash()
+  }
+
   public func split() throws -> (CipherState, CipherState) {
     if self.messagePatterns.count > 0 {
       throw HandshakeStateError.incompleteHandshake
