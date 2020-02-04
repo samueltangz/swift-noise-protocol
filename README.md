@@ -61,20 +61,20 @@ The functions are supported based on [session 12 of the specification](https://n
 The handshake patterns defined in [session 7 of the specification](https://noiseprotocol.org/noise.html#handshake-patterns) will be supported.
 
 * [X] `N`
-* [ ] `K`
+* [X] `K`
 * [X] `X`
-* [ ] `NN`
-* [ ] `NK`
-* [ ] `NX`
+* [X] `NN`
+* [X] `NK`
+* [X] `NX`
 * [X] `KN`
 * [X] `KK`
-* [ ] `KX`
-* [ ] `XN`
-* [ ] `XK`
-* [ ] `XX`
-* [ ] `IN`
+* [X] `KX`
+* [X] `XN`
+* [X] `XK`
+* [X] `XX`
+* [X] `IN`
 * [X] `IK`
-* [ ] `IX`
+* [X] `IX`
   
 ## Example usage
 
