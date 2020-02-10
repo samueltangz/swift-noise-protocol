@@ -1,6 +1,6 @@
 import Foundation
 import CryptoSwift
-import CryptoKit25519
+import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
 public protocol Curve {
@@ -24,6 +24,11 @@ public protocol Curve {
   // = A constant specifying the size in bytes of public keys and DH outputs. For security reasons,
   // DHLEN must be 32 or greater.
   var dhlen: Int { get }
+}
+
+// An extension on CryptoKit's SharedSecret to return Data
+extension SharedSecret {
+  var data: Data { Data(self.withUnsafeBytes { $0 }) }
 }
 
 public class C25519: Curve {
@@ -53,7 +58,7 @@ public class C25519: Curve {
       rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
     let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
     let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
-    return sharedKey.rawData
+    return sharedKey.data
   }
 
   public var dhlen: Int = 32

@@ -1,5 +1,4 @@
 import Foundation
-import CryptoSwift
 
 // https://noiseprotocol.org/noise.html#the-symmetricstate-object
 public class SymmetricState {
@@ -12,7 +11,7 @@ public class SymmetricState {
   var hashHelper: Hash
 
   init(protocolName: String) throws {
-    self.hashHelper = SHA256()
+    self.hashHelper = S256()
 
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
