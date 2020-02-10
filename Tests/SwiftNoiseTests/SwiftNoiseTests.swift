@@ -14,59 +14,28 @@ func getKeyPair(curveHelper: Curve, secretKey: Data?) -> KeyPair? {
 
 final class SwiftNoiseTests: XCTestCase {
   static var allTests = [
-    ("testManual", testManual),
     ("testSnowVectors", testSnowVectors)
   ]
 
-  func testManual() throws {
-    let curveHelper = C25519()
-
-    let responderStaticKeyPair = try curveHelper.generateKeyPair()
-    let initiatorEphemeralKeyPair = try curveHelper.generateKeyPair()
-    let responderEphemeralKeyPair = try curveHelper.generateKeyPair()
-
-    let prologue = Data()
-
-    let initiatorState = try HandshakeState(
-      pattern: .N,
-      initiator: true,
-      prologue: prologue,
-      e: initiatorEphemeralKeyPair,
-      rs: responderStaticKeyPair.publicKey
-    )
-    let responderState = try HandshakeState(
-      pattern: .N,
-      initiator: false,
-      prologue: prologue,
-      s: responderStaticKeyPair,
-      e: responderEphemeralKeyPair
-    )
-
-    // -> e, es
-    let initiatorTx = try initiatorState.writeMessage(payload: Data())
-    let payload = try responderState.readMessage(message: initiatorTx)
-    assert(payload == Data())
-    assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
-  }
-
+  let supportedCipherSuites = [
+    "Noise_N_25519_AESGCM_SHA256",
+    "Noise_K_25519_AESGCM_SHA256",
+    "Noise_X_25519_AESGCM_SHA256",
+    "Noise_NN_25519_AESGCM_SHA256",
+    "Noise_NK_25519_AESGCM_SHA256",
+    "Noise_NX_25519_AESGCM_SHA256",
+    "Noise_KN_25519_AESGCM_SHA256",
+    "Noise_KK_25519_AESGCM_SHA256",
+    "Noise_KX_25519_AESGCM_SHA256",
+    "Noise_XN_25519_AESGCM_SHA256",
+    "Noise_XK_25519_AESGCM_SHA256",
+    "Noise_XX_25519_AESGCM_SHA256",
+    "Noise_IN_25519_AESGCM_SHA256",
+    "Noise_IK_25519_AESGCM_SHA256",
+    "Noise_IX_25519_AESGCM_SHA256"
+  ]
+  
   func testSnowVectors() throws {
-    let supportedCipherSuites = [
-      "Noise_N_25519_AESGCM_SHA256",
-      "Noise_K_25519_AESGCM_SHA256",
-      "Noise_X_25519_AESGCM_SHA256",
-      "Noise_NN_25519_AESGCM_SHA256",
-      "Noise_NK_25519_AESGCM_SHA256",
-      "Noise_NX_25519_AESGCM_SHA256",
-      "Noise_KN_25519_AESGCM_SHA256",
-      "Noise_KK_25519_AESGCM_SHA256",
-      "Noise_KX_25519_AESGCM_SHA256",
-      "Noise_XN_25519_AESGCM_SHA256",
-      "Noise_XK_25519_AESGCM_SHA256",
-      "Noise_XX_25519_AESGCM_SHA256",
-      "Noise_IN_25519_AESGCM_SHA256",
-      "Noise_IK_25519_AESGCM_SHA256",
-      "Noise_IX_25519_AESGCM_SHA256"
-    ]
     let curveHelper = C25519()
 
     let path = Bundle(path: "Tests/SwiftNoiseTests")!.path(forResource: "SnowTestVectors", ofType: "json")
@@ -185,8 +154,8 @@ struct Message {
   var ciphertext: Data
 
   enum CodingKeys: String, CodingKey {
-    case payload = "payload"
-    case ciphertext = "ciphertext"
+    case payload
+    case ciphertext
   }
 }
 

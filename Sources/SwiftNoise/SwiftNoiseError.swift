@@ -29,4 +29,7 @@ enum CipherError: Error {
 
 enum DHError: Error {}
 
-enum HashError: Error {}
+enum HashError: Error {
+  case tooLittleOutputs
+  case tooManyOutputs
+}
