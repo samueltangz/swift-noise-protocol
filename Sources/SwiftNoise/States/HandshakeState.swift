@@ -201,6 +201,8 @@ public class HandshakeState {
   var messagePatterns: [[Token]]
   var symmetricState: SymmetricState
 
+  var curveHelper: Curve
+
   #if DEBUG
   public var remoteS: PublicKey? {
     get { return rs }
@@ -215,6 +217,8 @@ public class HandshakeState {
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
     self.symmetricState = try SymmetricState(protocolName: protocolName)
+
+    self.curveHelper = C25519()
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -286,7 +290,7 @@ public class HandshakeState {
             throw HandshakeStateError.ephemeralKeyAlreadyExist
           }
           #endif
-          let e = try self.e ?? generateKeyPair()
+          let e = try self.e ?? self.curveHelper.generateKeyPair()
           self.e = e
           out.append(Data(e.publicKey))
           self.symmetricState.mixHash(data: Data(e.publicKey))
@@ -304,7 +308,7 @@ public class HandshakeState {
           } else if self.re == nil {
             throw HandshakeStateError.missingRemoteEphemeralKey
           }
-          let dh = try diffieHellman(keyPair: self.e!, publicKey: self.re!)
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
         // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
         case .es:
@@ -314,7 +318,7 @@ public class HandshakeState {
             } else if self.rs == nil {
               throw HandshakeStateError.missingRemoteStaticKey
             }
-            let dh = try diffieHellman(keyPair: self.e!, publicKey: self.rs!)
+            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           } else {
             if self.s == nil {
@@ -322,7 +326,7 @@ public class HandshakeState {
             } else if self.re == nil {
               throw HandshakeStateError.missingRemoteEphemeralKey
             }
-            let dh = try diffieHellman(keyPair: self.s!, publicKey: self.re!)
+            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           }
         // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
@@ -333,7 +337,7 @@ public class HandshakeState {
             } else if self.rs == nil {
               throw HandshakeStateError.missingRemoteStaticKey
             }
-            let dh = try diffieHellman(keyPair: self.e!, publicKey: self.rs!)
+            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           } else {
             if self.s == nil {
@@ -341,7 +345,7 @@ public class HandshakeState {
             } else if self.re == nil {
               throw HandshakeStateError.missingRemoteEphemeralKey
             }
-            let dh = try diffieHellman(keyPair: self.s!, publicKey: self.re!)
+            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           }
         // For "ss": Calls MixKey(DH(s, rs)).
@@ -351,7 +355,7 @@ public class HandshakeState {
           } else if self.rs == nil {
             throw HandshakeStateError.missingRemoteStaticKey
           }
-          let dh = try diffieHellman(keyPair: self.s!, publicKey: self.rs!)
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
         default:
           throw HandshakeStateError.invalidMessagePattern
@@ -405,7 +409,7 @@ public class HandshakeState {
           } else if self.re == nil {
             throw HandshakeStateError.missingRemoteEphemeralKey
           }
-          let dh = try diffieHellman(keyPair: self.e!, publicKey: self.re!)
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
         // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
         case .es:
@@ -415,7 +419,7 @@ public class HandshakeState {
             } else if self.rs == nil {
               throw HandshakeStateError.missingRemoteStaticKey
             }
-            let dh = try diffieHellman(keyPair: self.e!, publicKey: self.rs!)
+            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           } else {
             if self.s == nil {
@@ -423,7 +427,7 @@ public class HandshakeState {
             } else if self.re == nil {
               throw HandshakeStateError.missingRemoteEphemeralKey
             }
-            let dh = try diffieHellman(keyPair: self.s!, publicKey: self.re!)
+            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           }
         // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
@@ -434,7 +438,7 @@ public class HandshakeState {
             } else if self.rs == nil {
               throw HandshakeStateError.missingRemoteStaticKey
             }
-            let dh = try diffieHellman(keyPair: self.e!, publicKey: self.rs!)
+            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           } else {
             if self.s == nil {
@@ -442,7 +446,7 @@ public class HandshakeState {
             } else if self.re == nil {
               throw HandshakeStateError.missingRemoteEphemeralKey
             }
-            let dh = try diffieHellman(keyPair: self.s!, publicKey: self.re!)
+            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
             try self.symmetricState.mixKey(inputKeyMaterial: dh)
           }
         // For "ss": Calls MixKey(DH(s, rs)).
@@ -452,7 +456,7 @@ public class HandshakeState {
           } else if self.rs == nil {
             throw HandshakeStateError.missingRemoteStaticKey
           }
-          let dh = try diffieHellman(keyPair: self.s!, publicKey: self.rs!)
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
         default:
           throw HandshakeStateError.invalidMessagePattern

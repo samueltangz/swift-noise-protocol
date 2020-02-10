@@ -9,7 +9,11 @@ public class SymmetricState {
   var h: Data
   var cipherState: CipherState
 
+  var hashHelper: Hash
+
   init(protocolName: String) throws {
+    self.hashHelper = SHA256()
+
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
     // Otherwise sets h = HASH(protocol_name).
@@ -17,16 +21,17 @@ public class SymmetricState {
     if h.count <= 32 {
       self.h = h + Data(repeating: 0, count: 32-h.count)
     } else {
-      self.h = Data(Digest.sha256(h.bytes))
+      self.h = self.hashHelper.hash(data: h)
     }
     // Sets ck = h.
     self.ck = self.h
+
     // Calls InitializeKey(empty).
     self.cipherState = try CipherState()
   }
   func mixKey(inputKeyMaterial: Data) throws {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
-    let (ck, tempK) = try hkdf2(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
+    let (ck, tempK) = try self.hashHelper.hkdf2(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
     self.ck = ck
 
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
@@ -36,11 +41,11 @@ public class SymmetricState {
   }
   func mixHash(data: Data) {
     // Sets h = HASH(h || data)
-    self.h = Data(Digest.sha256(self.h + data.bytes))
+    self.h = self.hashHelper.hash(data: self.h + data)
   }
   func mixKeyAndHash(inputKeyMaterial: Data) throws {
     // Sets ck, temp_h, temp_k = HKDF(ck, input_key_material, 3).
-    let (ck, tempH, tempK) = try hkdf3(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
+    let (ck, tempH, tempK) = try self.hashHelper.hkdf3(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
     self.ck = ck
 
     // Calls MixHash(temp_h).
@@ -71,7 +76,7 @@ public class SymmetricState {
   }
   func split() throws -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).
-    let (tempK1, tempK2) = try hkdf2(chainingKey: self.ck, inputKeyMaterial: Data())
+    let (tempK1, tempK2) = try self.hashHelper.hkdf2(chainingKey: self.ck, inputKeyMaterial: Data())
 
     // If HASHLEN is 64, then truncates temp_k1 and temp_k2 to 32 bytes.
 

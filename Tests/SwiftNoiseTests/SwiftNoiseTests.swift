@@ -1,19 +1,11 @@
 import XCTest
 import SwiftNoise
 
-func getKeyPair(secretKey: Data?) -> KeyPair? {
+func getKeyPair(curveHelper: Curve, secretKey: Data?) -> KeyPair? {
   if secretKey == nil {
     return nil
   }
-  return try! constructKeyPair(secretKey: secretKey!)
-}
-
-func getPublicKey(secretKey: Data?) -> PublicKey? {
-  let keyPair = getKeyPair(secretKey: secretKey)
-  if keyPair == nil {
-    return nil
-  }
-  return keyPair!.publicKey
+  return try! curveHelper.constructKeyPair(secretKey: secretKey!)
 }
 
 final class SwiftNoiseTests: XCTestCase {
@@ -23,9 +15,11 @@ final class SwiftNoiseTests: XCTestCase {
   ]
 
   func testManual() throws {
-    let responderStaticKeyPair = try generateKeyPair()
-    let initiatorEphemeralKeyPair = try generateKeyPair()
-    let responderEphemeralKeyPair = try generateKeyPair()
+    let curveHelper = C25519()
+
+    let responderStaticKeyPair = try curveHelper.generateKeyPair()
+    let initiatorEphemeralKeyPair = try curveHelper.generateKeyPair()
+    let responderEphemeralKeyPair = try curveHelper.generateKeyPair()
 
     let prologue = Data()
 
@@ -69,7 +63,8 @@ final class SwiftNoiseTests: XCTestCase {
       "Noise_IK_25519_AESGCM_SHA256",
       "Noise_IX_25519_AESGCM_SHA256"
     ]
-    
+    let curveHelper = C25519()
+
     let path = Bundle(path: "Tests/SwiftNoiseTests")!.path(forResource: "SnowTestVectors", ofType: "json")
     let url = URL(fileURLWithPath: path!)
     let data = try Data(contentsOf: url)
@@ -84,8 +79,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: pattern,
         initiator: true,
         prologue: testVector.initPrologue,
-        s: getKeyPair(secretKey: testVector.initStatic),
-        e: getKeyPair(secretKey: testVector.initEphemeral),
+        s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initStatic),
+        e: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initEphemeral),
         rs: testVector.initRemoteStatic
       )
 
@@ -93,8 +88,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: pattern,
         initiator: false,
         prologue: testVector.respPrologue,
-        s: getKeyPair(secretKey: testVector.respStatic),
-        e: getKeyPair(secretKey: testVector.respEphemeral),
+        s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respStatic),
+        e: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respEphemeral),
         rs: testVector.respRemoteStatic
       )
 
