@@ -65,9 +65,9 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
   ),
   .NK: HandshakePatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [],
+    responderPremessages: [ .s ],
     messagePatterns: [
-      [ .e ],
+      [ .e, .es ],
       [ .e, .ee ]
     ]
   ),
