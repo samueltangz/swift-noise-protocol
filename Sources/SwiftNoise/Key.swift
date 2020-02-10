@@ -1,16 +1,16 @@
 import Foundation
 import CryptoKit25519
 
-public func constructKeyPair(secretKey: SecretKey) -> KeyPair {
-  let secretKeyObj = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: secretKey)))
+public func constructKeyPair(secretKey: SecretKey) throws -> KeyPair {
+  let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: secretKey)))
   let publicKey = secretKeyObj.publicKey.rawRepresentation
   return KeyPair(publicKey: publicKey, secretKey: secretKey)
 }
 
-public func generateKeyPair() -> KeyPair {
+public func generateKeyPair() throws -> KeyPair {
   // using AES.randomIV as a reliable, secure source of random
   let secretKey = Data(AES.randomIV(32))
-  return constructKeyPair(secretKey: secretKey)
+  return try constructKeyPair(secretKey: secretKey)
 }
 
 func normalize(secretKey: SecretKey) -> SecretKey {
@@ -21,10 +21,10 @@ func normalize(secretKey: SecretKey) -> SecretKey {
   return newSecretKey
 }
 
-public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) -> Data {
-  let secretKeyObj = try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
-  let publicKeyObj = try! Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
-  let sharedKey = try! secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
+public func diffieHellman(keyPair: KeyPair, publicKey: PublicKey) throws -> Data {
+  let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
+  let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
+  let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
   return sharedKey.rawData
 }
 

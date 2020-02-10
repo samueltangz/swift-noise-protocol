@@ -81,9 +81,9 @@ The handshake patterns defined in [session 7 of the specification](https://noise
 The following is an example usage for Noise with `Noise_X_25519_AESGCM_SHA256`.
 
 ```swift
-let responderStaticKeyPair = generateKeyPair()
-let initiatorEphemeralKeyPair = generateKeyPair()
-let responderEphemeralKeyPair = generateKeyPair()
+let responderStaticKeyPair = try! generateKeyPair()
+let initiatorEphemeralKeyPair = try! generateKeyPair()
+let responderEphemeralKeyPair = try! generateKeyPair()
 
 let prologue = Data()
 
@@ -106,15 +106,4 @@ let responderState = try! HandshakeState(
 let initiatorTx = try! initiatorState.writeMessage(payload: Data())
 assert(try! responderState.readMessage(message: initiatorTx) == Data())
 assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
-
-let responderSplits = try! responderState.split()
-let initiatorSplits = try! initiatorState.split()
-
-let plaintext1 = Data("hello world".utf8)
-let ciphertext1 = initiatorSplits.0.encryptWithAd(ad: Data(), plaintext: plaintext1)
-assert(responderSplits.0.decryptWithAd(ad: Data(), ciphertext: ciphertext1) == plaintext1)
-
-let plaintext2 = Data("hello world, too".utf8)
-let ciphertext2 = responderSplits.1.encryptWithAd(ad: Data(), plaintext: plaintext2)
-assert(initiatorSplits.1.decryptWithAd(ad: Data(), ciphertext: ciphertext2) == plaintext2)
 ```

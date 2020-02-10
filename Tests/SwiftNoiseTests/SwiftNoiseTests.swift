@@ -5,7 +5,7 @@ func getKeyPair(secretKey: Data?) -> KeyPair? {
   if secretKey == nil {
     return nil
   }
-  return constructKeyPair(secretKey: secretKey!)
+  return try! constructKeyPair(secretKey: secretKey!)
 }
 
 func getPublicKey(secretKey: Data?) -> PublicKey? {
@@ -18,10 +18,40 @@ func getPublicKey(secretKey: Data?) -> PublicKey? {
 
 final class SwiftNoiseTests: XCTestCase {
   static var allTests = [
+    ("testManual", testManual),
     ("testSnowVectors", testSnowVectors)
   ]
 
-  func testSnowVectors() {
+  func testManual() throws {
+    let responderStaticKeyPair = try generateKeyPair()
+    let initiatorEphemeralKeyPair = try generateKeyPair()
+    let responderEphemeralKeyPair = try generateKeyPair()
+
+    let prologue = Data()
+
+    let initiatorState = try HandshakeState(
+      pattern: .N,
+      initiator: true,
+      prologue: prologue,
+      e: initiatorEphemeralKeyPair,
+      rs: responderStaticKeyPair.publicKey
+    )
+    let responderState = try HandshakeState(
+      pattern: .N,
+      initiator: false,
+      prologue: prologue,
+      s: responderStaticKeyPair,
+      e: responderEphemeralKeyPair
+    )
+
+    // -> e, es
+    let initiatorTx = try initiatorState.writeMessage(payload: Data())
+    let payload = try responderState.readMessage(message: initiatorTx)
+    assert(payload == Data())
+    assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
+  }
+
+  func testSnowVectors() throws {
     let supportedCipherSuites = [
       "Noise_N_25519_AESGCM_SHA256",
       "Noise_K_25519_AESGCM_SHA256",
@@ -42,15 +72,15 @@ final class SwiftNoiseTests: XCTestCase {
     
     let path = Bundle(path: "Tests/SwiftNoiseTests")!.path(forResource: "SnowTestVectors", ofType: "json")
     let url = URL(fileURLWithPath: path!)
-    let data = try! Data(contentsOf: url)
-    let json = try! JSONDecoder().decode(SnowTestVectors.self, from: data)
+    let data = try Data(contentsOf: url)
+    let json = try JSONDecoder().decode(SnowTestVectors.self, from: data)
     let testVectors = json.vectors
-    testVectors.forEach { testVector in
+    try testVectors.forEach { testVector in
       if !supportedCipherSuites.contains(testVector.protocolName) {
         return
       }
-      let pattern = try! getPatternFromProtocolName(protocolName: testVector.protocolName)
-      let initiatorState = try! HandshakeState(
+      let pattern = try getPatternFromProtocolName(protocolName: testVector.protocolName)
+      let initiatorState = try HandshakeState(
         pattern: pattern,
         initiator: true,
         prologue: testVector.initPrologue,
@@ -59,7 +89,7 @@ final class SwiftNoiseTests: XCTestCase {
         rs: testVector.initRemoteStatic
       )
 
-      let responderState = try! HandshakeState(
+      let responderState = try HandshakeState(
         pattern: pattern,
         initiator: false,
         prologue: testVector.respPrologue,
@@ -68,17 +98,18 @@ final class SwiftNoiseTests: XCTestCase {
         rs: testVector.respRemoteStatic
       )
 
+      let states: [HandshakeState] = [initiatorState, responderState]
+
       for index in 0..<testVector.messages.count {
         let message = testVector.messages[index]
-        if index & 1 == 0 {
-          let tx = try! initiatorState.writeMessage(payload: message.payload)
-          assert(try! responderState.readMessage(message: tx) == message.payload)
-          assert(tx == message.ciphertext)
-        } else {
-          let tx = try! responderState.writeMessage(payload: message.payload)
-          assert(try! initiatorState.readMessage(message: tx) == message.payload)
-          assert(tx == message.ciphertext)
-        }
+
+        let senderState = states[index & 1]
+        let receiverState = states[(index & 1) ^ 1]
+
+        let ciphertext = try senderState.writeMessage(payload: message.payload)
+        let payload = try receiverState.readMessage(message: ciphertext)
+        XCTAssertEqual(payload, message.payload)
+        XCTAssertEqual(ciphertext, message.ciphertext)
       }
     }
   }
@@ -162,19 +193,19 @@ struct Message {
 
 extension Message: Encodable {}
 extension Message: Decodable {
-  init(from decoder: Decoder) {
-    let values = try! decoder.container(keyedBy: CodingKeys.self)
-    self.payload = try! values.decodeHex(forKey: .payload)!
-    self.ciphertext = try! values.decodeHex(forKey: .ciphertext)!
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    self.payload = try values.decodeHex(forKey: .payload)!
+    self.ciphertext = try values.decodeHex(forKey: .ciphertext)!
   }
 }
 
 extension KeyedDecodingContainer {
-  func decodeHex(forKey key: Key) -> Data? {
+  func decodeHex(forKey key: Key) throws -> Data? {
     if !self.contains(key) {
       return nil
     }
-    let hexString = try! self.decode(String.self, forKey: key)
+    let hexString = try self.decode(String.self, forKey: key)
     return Data(hex: hexString)
   }
 }

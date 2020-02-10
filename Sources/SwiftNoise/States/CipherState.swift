@@ -24,27 +24,27 @@ public class CipherState {
     // Sets n = nonce.
     self.n = nonce
   }
-  public func encryptWithAd(ad: Data, plaintext: Data) -> Data {
+  public func encryptWithAd(ad: Data, plaintext: Data) throws -> Data {
     // If k is non-empty returns ENCRYPT(k, n++, ad, plaintext). Otherwise returns plaintext.
     if !self.hasKey() {
       return plaintext
     }
-    let ciphertext = try! encrypt(k: self.k!, n: self.n, ad: ad, plaintext: plaintext)
-    try! self.n.increment()
+    let ciphertext = try encrypt(k: self.k!, n: self.n, ad: ad, plaintext: plaintext)
+    try self.n.increment()
     return ciphertext
   }
-  public func decryptWithAd(ad: Data, ciphertext: Data) -> Data {
+  public func decryptWithAd(ad: Data, ciphertext: Data) throws -> Data {
     // If k is non-empty returns DECRYPT(k, n++, ad, ciphertext). Otherwise returns ciphertext.
     // If an authentication failure occurs in DECRYPT() then n is not incremented and an error is signaled to the caller.
     if !self.hasKey() {
       return ciphertext
     }
-    let plaintext = try! decrypt(k: self.k!, n: self.n, ad: ad, ciphertext: ciphertext)
-    try! self.n.increment()
+    let plaintext = try decrypt(k: self.k!, n: self.n, ad: ad, ciphertext: ciphertext)
+    try self.n.increment()
     return plaintext
   }
-  func rekey() {
+  func rekey() throws {
     // Sets k = REKEY(k).
-    self.k = try! encrypt(k: self.k!, n: 0xffffffff, ad: Data(), plaintext: Data(repeating: 0, count: 32))
+    self.k = try encrypt(k: self.k!, n: 0xffffffff, ad: Data(), plaintext: Data(repeating: 0, count: 32))
   }
 }
