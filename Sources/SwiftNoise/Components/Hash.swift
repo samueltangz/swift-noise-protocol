@@ -14,8 +14,7 @@ protocol Hash {
   // Takes a chaining_key byte sequence of length HASHLEN, and an input_key_material byte sequence
   // with length either zero bytes, 32 bytes, or DHLEN bytes. Returns a pair or triple of byte
   // sequences each of length HASHLEN, depending on whether num_outputs is two or three.
-  func hkdf2(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data)
-  func hkdf3(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data, Data)
+  func hkdf(chainingKey: Data, inputKeyMaterial: Data, numOutputs: UInt8) throws -> [Data]
 
   // = A constant specifying the size in bytes of the hash output. Must be 32 or 64.
   var hashlen: Int { get }
@@ -35,19 +34,21 @@ class SHA256: Hash {
     return Data(try HMAC(key: key.bytes, variant: .sha256).authenticate(data.bytes))
   }
 
-  func hkdf2(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data) {
+  func hkdf(chainingKey: Data, inputKeyMaterial: Data, numOutputs: UInt8) throws -> [Data] {
+    if numOutputs < 2 {
+      throw HashError.tooLittleOutputs
+    }
+    if numOutputs > 3 {
+      throw HashError.tooManyOutputs
+    }
     let tempKey = Data(try self.hmac(key: chainingKey, data: inputKeyMaterial))
-    let output1 = Data(try self.hmac(key: tempKey, data: Data([1])))
-    let output2 = Data(try self.hmac(key: tempKey, data: Data(output1 + [2])))
-    return (output1, output2)
-  }
-
-  func hkdf3(chainingKey: Data, inputKeyMaterial: Data) throws -> (Data, Data, Data) {
-    let tempKey = Data(try self.hmac(key: chainingKey, data: inputKeyMaterial))
-    let output1 = Data(try self.hmac(key: tempKey, data: Data([1])))
-    let output2 = Data(try self.hmac(key: tempKey, data: Data(output1 + [2])))
-    let output3 = Data(try self.hmac(key: tempKey, data: Data(output2 + [3])))
-    return (output1, output2, output3)
+    var lastOutput: Data = Data()
+    var outputs: [Data] = []
+    for index in 1...numOutputs {
+      lastOutput = Data(try self.hmac(key: tempKey, data: lastOutput + [index]))
+      outputs.append(lastOutput)
+    }
+    return outputs
   }
 
   var hashlen: Int = 32

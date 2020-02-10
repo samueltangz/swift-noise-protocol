@@ -2,7 +2,8 @@ import Foundation
 
 // https://noiseprotocol.org/noise.html#the-cipherstate-object
 public class CipherState {
-  // k: A cipher key of 32 bytes (which may be empty). Empty is a special value which indicates k has not yet been initialized.
+  // k: A cipher key of 32 bytes (which may be empty). Empty is a special value which indicates k
+  // has not yet been initialized.
   var k: Data?
   // n: An 8-byte (64-bit) unsigned integer nonce.
   var n: Nonce
@@ -38,8 +39,9 @@ public class CipherState {
     return ciphertext
   }
   public func decryptWithAd(ad: Data, ciphertext: Data) throws -> Data {
-    // If k is non-empty returns DECRYPT(k, n++, ad, ciphertext). Otherwise returns ciphertext.
-    // If an authentication failure occurs in DECRYPT() then n is not incremented and an error is signaled to the caller.
+    // If k is non-empty returns DECRYPT(k, n++, ad, ciphertext). Otherwise returns ciphertext. If
+    // an authentication failure occurs in DECRYPT() then n is not incremented and an error is
+    // signaled to the caller.
     if !self.hasKey() {
       return ciphertext
     }

@@ -1,5 +1,6 @@
 enum HandshakeStateError: Error {
   case invalidPattern // should not happen in normal use case
+  case invalidKey // should not happen in normal use case
   case invalidPremessagePattern
   case invalidMessagePattern
   case missingStaticKey
@@ -29,4 +30,7 @@ enum CipherError: Error {
 
 enum DHError: Error {}
 
-enum HashError: Error {}
+enum HashError: Error {
+  case tooLittleOutputs
+  case tooManyOutputs
+}

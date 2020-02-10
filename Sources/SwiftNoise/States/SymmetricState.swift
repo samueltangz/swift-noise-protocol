@@ -31,8 +31,9 @@ public class SymmetricState {
   }
   func mixKey(inputKeyMaterial: Data) throws {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
-    let (ck, tempK) = try self.hashHelper.hkdf2(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
-    self.ck = ck
+    let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 2)
+    self.ck = hkdfOutput[0]
+    let tempK = hkdfOutput[1]
 
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
 
@@ -45,8 +46,10 @@ public class SymmetricState {
   }
   func mixKeyAndHash(inputKeyMaterial: Data) throws {
     // Sets ck, temp_h, temp_k = HKDF(ck, input_key_material, 3).
-    let (ck, tempH, tempK) = try self.hashHelper.hkdf3(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial)
-    self.ck = ck
+    let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 3)
+    self.ck = hkdfOutput[0]
+    let tempH = hkdfOutput[1]
+    let tempK = hkdfOutput[2]
 
     // Calls MixHash(temp_h).
     self.mixHash(data: tempH)
@@ -76,7 +79,9 @@ public class SymmetricState {
   }
   func split() throws -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).
-    let (tempK1, tempK2) = try self.hashHelper.hkdf2(chainingKey: self.ck, inputKeyMaterial: Data())
+    let tempKs = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: Data(), numOutputs: 2)
+    let tempK1 = tempKs[0]
+    let tempK2 = tempKs[1]
 
     // If HASHLEN is 64, then truncates temp_k1 and temp_k2 to 32 bytes.
 

@@ -1,0 +1,19 @@
+identifier_name:
+  min_length: 1
+  excluded:
+    - N
+    - K
+    - X
+    - NN
+    - NK
+    - NX
+    - KN
+    - KK
+    - KX
+    - XN
+    - XK
+    - XX
+    - IN
+    - IK
+    - IX
+reporter: "json"
