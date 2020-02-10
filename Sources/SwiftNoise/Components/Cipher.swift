@@ -1,5 +1,5 @@
 import Foundation
-import CryptoSwift
+import Crypto
 
 // https://noiseprotocol.org/noise.html#cipher-functions
 protocol Cipher {
@@ -24,55 +24,66 @@ protocol Cipher {
 }
 
 class AESGCM: Cipher {
-  // A helper method to convert Nonce (which is a 64-bit unsigned integer) to Data.
-  func nonceToData(n: Nonce) -> Data {
-    return Data([
-      0, 0, 0, 0,
-      UInt8(truncatingIfNeeded: n>>56),
-      UInt8(truncatingIfNeeded: n>>48),
-      UInt8(truncatingIfNeeded: n>>40),
-      UInt8(truncatingIfNeeded: n>>32),
-      UInt8(truncatingIfNeeded: n>>24),
-      UInt8(truncatingIfNeeded: n>>16),
-      UInt8(truncatingIfNeeded: n>>8),
-      UInt8(truncatingIfNeeded: n>>0)
-    ])
+  // A helper method to convert Nonce (which is a 64-bit unsigned integer) to AES.GCM.Nonce.
+  func nonceToAESGCMNonce(n: Nonce) -> AES.GCM.Nonce {
+    return try! AES.GCM.Nonce(
+      data: [
+        0, 0, 0, 0,
+        UInt8(truncatingIfNeeded: n>>56),
+        UInt8(truncatingIfNeeded: n>>48),
+        UInt8(truncatingIfNeeded: n>>40),
+        UInt8(truncatingIfNeeded: n>>32),
+        UInt8(truncatingIfNeeded: n>>24),
+        UInt8(truncatingIfNeeded: n>>16),
+        UInt8(truncatingIfNeeded: n>>8),
+        UInt8(truncatingIfNeeded: n>>0)
+      ])
   }
 
   func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
-    let nData = nonceToData(n: n)
-    let gcm = GCM(iv: nData.bytes, additionalAuthenticatedData: ad.bytes, mode: .combined)
-    var cipher: AES
-    do {
-      cipher = try AES(key: k.bytes, blockMode: gcm, padding: .noPadding)
-    } catch {
-      throw CipherError.cannotInstantiateCipher(error: error)
-    }
-    var ciphertext: Data
-    do {
-      ciphertext = Data(try cipher.encrypt(plaintext.bytes))
-    } catch {
-      throw CipherError.invalidPlaintext(error: error)
-    }
-    return ciphertext
+    let nonce = nonceToAESGCMNonce(n: n)
+    let sealedBox = try AES.GCM.seal(plaintext, using: SymmetricKey(data: k), nonce: nonce, authenticating: ad)
+    return sealedBox.ciphertext + sealedBox.tag
   }
 
   func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
-    let nData = nonceToData(n: n)
-    let gcm = GCM(iv: nData.bytes, additionalAuthenticatedData: ad.bytes, mode: .combined)
-    var cipher: AES
-    do {
-      cipher = try AES(key: k.bytes, blockMode: gcm, padding: .noPadding)
-    } catch {
-      throw CipherError.cannotInstantiateCipher(error: error)
-    }
-    var plaintext: Data
-    do {
-      plaintext = Data(try cipher.decrypt(ciphertext.bytes))
-    } catch {
-      throw CipherError.invalidCiphertext(error: error)
-    }
-    return plaintext
+    let nonce = nonceToAESGCMNonce(n: n)
+    let sealedBox = try AES.GCM.SealedBox(combined: nonce + ciphertext)
+    return try AES.GCM.open(sealedBox, using: SymmetricKey(data: k), authenticating: ad)
+  }
+
+  func rekey(k: Data) throws -> Data {
+    return try self.encrypt(k: k, n: 0xffffffffffffffff, ad: Data(), plaintext: Data(repeating: 0, count: 32))
+  }
+}
+
+class CCP: Cipher {
+  // A helper method to convert Nonce (which is a 64-bit unsigned integer) to ChaChaPoly.Nonce.
+  func nonceToChaChaPolyNonce(n: Nonce) -> ChaChaPoly.Nonce {
+    return try! ChaChaPoly.Nonce(
+      data: [
+        0, 0, 0, 0,
+        UInt8(truncatingIfNeeded: n>>0),
+        UInt8(truncatingIfNeeded: n>>8),
+        UInt8(truncatingIfNeeded: n>>16),
+        UInt8(truncatingIfNeeded: n>>24),
+        UInt8(truncatingIfNeeded: n>>32),
+        UInt8(truncatingIfNeeded: n>>40),
+        UInt8(truncatingIfNeeded: n>>48),
+        UInt8(truncatingIfNeeded: n>>56)
+      ])
+  }
+
+  func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
+    let nonce = nonceToChaChaPolyNonce(n: n)
+    let sealedBox = try ChaChaPoly.seal(plaintext, using: SymmetricKey(data: k), nonce: nonce, authenticating: ad)
+    return sealedBox.ciphertext + sealedBox.tag
+  }
+
+  func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
+    let nonce = nonceToChaChaPolyNonce(n: n)
+    let sealedBox = try ChaChaPoly.SealedBox(combined: nonce + ciphertext)
+    return try ChaChaPoly.open(sealedBox, using: SymmetricKey(data: k), authenticating: ad)
   }
 
   func rekey(k: Data) throws -> Data {

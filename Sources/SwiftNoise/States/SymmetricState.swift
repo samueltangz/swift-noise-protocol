@@ -9,9 +9,11 @@ public class SymmetricState {
   var cipherState: CipherState
 
   var hashHelper: Hash
+  var cipherHelper: Cipher
 
   init(protocolName: String) throws {
     self.hashHelper = S256()
+    self.cipherHelper = AESGCM()
 
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
@@ -26,7 +28,7 @@ public class SymmetricState {
     self.ck = self.h
 
     // Calls InitializeKey(empty).
-    self.cipherState = try CipherState()
+    self.cipherState = try CipherState(cipherHelper: self.cipherHelper)
   }
   func mixKey(inputKeyMaterial: Data) throws {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
@@ -37,7 +39,7 @@ public class SymmetricState {
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
 
     // Calls InitializeKey(temp_k).
-    self.cipherState = try CipherState(key: tempK)
+    self.cipherState = try CipherState(cipherHelper: self.cipherHelper, key: tempK)
   }
   func mixHash(data: Data) {
     // Sets h = HASH(h || data)
@@ -56,7 +58,7 @@ public class SymmetricState {
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
 
     // Calls InitializeKey(temp_k).
-    self.cipherState = try CipherState(key: tempK)
+    self.cipherState = try CipherState(cipherHelper: self.cipherHelper, key: tempK)
   }
   func getHandshakeHash() -> Data {
     // Returns h.
@@ -86,8 +88,8 @@ public class SymmetricState {
 
     // Creates two new CipherState objects c1 and c2.
     // Calls c1.InitializeKey(temp_k1) and c2.InitializeKey(temp_k2).
-    let c1 = try CipherState(key: tempK1)
-    let c2 = try CipherState(key: tempK2)
+    let c1 = try CipherState(cipherHelper: self.cipherHelper, key: tempK1)
+    let c2 = try CipherState(cipherHelper: self.cipherHelper, key: tempK2)
 
     // Returns the pair (c1, c2).
     return (c1, c2)

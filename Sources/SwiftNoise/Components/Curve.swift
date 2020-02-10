@@ -1,5 +1,4 @@
 import Foundation
-import CryptoSwift
 import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
@@ -49,7 +48,7 @@ public class C25519: Curve {
   }
 
   public func generateKeyPair() throws -> KeyPair {
-    let secretKey = Data(AES.randomIV(32))
+    let secretKey = Curve25519.Signing.PrivateKey().rawRepresentation
     return try constructKeyPair(secretKey: secretKey)
   }
 
