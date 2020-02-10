@@ -1,9 +1,5 @@
 import Foundation
 
-enum CipherStateError: Error {
-  case invalidKeySize
-}
-
 // https://noiseprotocol.org/noise.html#the-cipherstate-object
 public class CipherState {
   // k: A cipher key of 32 bytes (which may be empty). Empty is a special value which indicates k has not yet been initialized.

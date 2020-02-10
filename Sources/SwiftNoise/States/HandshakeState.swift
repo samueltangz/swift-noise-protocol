@@ -1,26 +1,21 @@
 import Foundation
 
-enum HandshakeStateError: Error {
-  case invalidPattern // should not happen in normal use case
-  case invalidPremessagePattern
-  case invalidMessagePattern
-  case missingStaticKey
-  case missingRemoteStaticKey
-  case staticKeyAlreadyExist
-  case missingEphemeralKey
-  case missingRemoteEphemeralKey
-  case ephemeralKeyAlreadyExist
-  case incompleteHandshake
-  case completedHandshake
-  case messageTooShort
-}
-
 public enum HandshakePattern: String {
   case N
+  case K
   case X
-  case IK
-  case KK
+  case NN
+  case NK
+  case NX
   case KN
+  case KK
+  case KX
+  case XN
+  case XK
+  case XX
+  case IN
+  case IK
+  case IX
 }
 
 public enum Token {
@@ -46,6 +41,13 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .es ]
     ]
   ),
+  .K: HandshakePatternDetails(
+    initiatorPremessages: [ .s ],
+    responderPremessages: [ .s ],
+    messagePatterns: [
+      [ .e, .es, .ss ]
+    ]
+  ),
   .X: HandshakePatternDetails(
     initiatorPremessages: [],
     responderPremessages: [ .s ],
@@ -53,11 +55,35 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .es, .s, .ss ]
     ]
   ),
-  .IK: HandshakePatternDetails(
+  .NN: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
+      [ .e, .ee ]
+    ]
+  ),
+  .NK: HandshakePatternDetails(
     initiatorPremessages: [],
     responderPremessages: [ .s ],
     messagePatterns: [
-      [ .e, .es, .s, .ss ],
+      [ .e, .es ],
+      [ .e, .ee ]
+    ]
+  ),
+  .NX: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
+      [ .e, .ee, .s, .es ]
+    ]
+  ),
+  .KN: HandshakePatternDetails(
+    initiatorPremessages: [ .s ],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
       [ .e, .ee, .se ]
     ]
   ),
@@ -69,12 +95,63 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .ee, .se ]
     ]
   ),
-  .KN: HandshakePatternDetails(
+  .KX: HandshakePatternDetails(
     initiatorPremessages: [ .s ],
     responderPremessages: [],
     messagePatterns: [
       [ .e ],
+      [ .e, .ee, .se, .s, .es ]
+    ]
+  ),
+  .XN:  HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
+      [ .e, .ee ],
+      [ .s, .se ]
+    ]
+  ),
+  .XK:  HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [ .s ],
+    messagePatterns: [
+      [ .e, .es ],
+      [ .e, .ee ],
+      [ .s, .se ]
+    ]
+  ),
+  .XX: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e ],
+      [ .e, .ee, .s, .es ],
+      [ .s, .se ]
+    ]
+  ),
+  .IN: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e, .s ],
       [ .e, .ee, .se ]
+    ]
+  ),
+  .IK: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [ .s ],
+    messagePatterns: [
+      [ .e, .es, .s, .ss ],
+      [ .e, .ee, .se ]
+    ]
+  ),
+  .IX: HandshakePatternDetails(
+    initiatorPremessages: [],
+    responderPremessages: [],
+    messagePatterns: [
+      [ .e, .s ],
+      [ .e, .ee, .se, .s, .es ]
     ]
   ),
 ]

@@ -8,10 +8,6 @@ public struct KeyPair {
   public var secretKey: SecretKey
 }
 
-enum NonceError: Error {
-  case nonceOverflow
-}
-
 public typealias Nonce = UInt64
 
 extension Nonce {
