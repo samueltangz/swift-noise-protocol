@@ -1,0 +1,4 @@
+identifier_name:
+  min_length: 1
+
+reporter: "json"

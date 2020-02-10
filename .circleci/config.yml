@@ -21,11 +21,11 @@ jobs:
       - image: dantoml/swiftlint:latest
     steps:
       - checkout
-      - run: swiftlint lint --reporter junit | tee result.xml
+      - run: swiftlint lint
       - store_artifacts:
-          path: result.xml
+          path: result.json
       - store_test_results:
-          path: result.xml
+          path: result.json
 
 workflows:
   build-test:

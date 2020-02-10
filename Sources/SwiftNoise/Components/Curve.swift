@@ -45,11 +45,12 @@ public class C25519: Curve {
 
   public func generateKeyPair() throws -> KeyPair {
     let secretKey = Data(AES.randomIV(32))
-    return try constructKeyPair(secretKey: secretKey)    
+    return try constructKeyPair(secretKey: secretKey)
   }
 
   public func dh(keyPair: KeyPair, publicKey: PublicKey) throws -> Data {
-    let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
+    let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(
+      rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
     let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
     let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
     return sharedKey.rawData

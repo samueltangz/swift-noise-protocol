@@ -15,6 +15,6 @@ extension Nonce {
     if self == 0xffffffff {
       throw NonceError.nonceOverflow
     }
-    self = self+1
+    self += 1
   }
 }

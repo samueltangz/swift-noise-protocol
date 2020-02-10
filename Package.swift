@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
   name: "SwiftNoise",
   products: [
-    .library(name: "SwiftNoise", targets: ["SwiftNoise"]),
+    .library(name: "SwiftNoise", targets: ["SwiftNoise"])
   ],
   dependencies: [
     // Dependencies declare other packages that this package depends on.
@@ -26,6 +26,6 @@ let package = Package(
       name: "SwiftNoiseTests",
       dependencies: [
         "SwiftNoise"
-      ]),
+      ])
   ]
 )

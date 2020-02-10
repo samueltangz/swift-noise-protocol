@@ -103,7 +103,7 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .ee, .se, .s, .es ]
     ]
   ),
-  .XN:  HandshakePatternDetails(
+  .XN: HandshakePatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
@@ -112,7 +112,7 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .s, .se ]
     ]
   ),
-  .XK:  HandshakePatternDetails(
+  .XK: HandshakePatternDetails(
     initiatorPremessages: [],
     responderPremessages: [ .s ],
     messagePatterns: [
@@ -153,7 +153,7 @@ let patterns: [HandshakePattern: HandshakePatternDetails] = [
       [ .e, .s ],
       [ .e, .ee, .se, .s, .es ]
     ]
-  ),
+  )
 ]
 
 func getStaticKey(s: KeyPair?, rs: PublicKey?, own: Bool) throws -> PublicKey {
@@ -243,28 +243,28 @@ public class HandshakeState {
 
     for token in patternDetails!.initiatorPremessages {
       switch token {
-        case .s:
-          let s = try getStaticKey(s: self.s, rs: self.rs, own: self.initiator)
-          self.symmetricState.mixHash(data: Data(s))
-        case .e:
-          let e = try getEphemeralKey(e: self.e, re: self.re, own: self.initiator)
-          self.symmetricState.mixHash(data: Data(e))
-        default:
-          throw HandshakeStateError.invalidPremessagePattern
-      } 
+      case .s:
+        let s = try getStaticKey(s: self.s, rs: self.rs, own: self.initiator)
+        self.symmetricState.mixHash(data: Data(s))
+      case .e:
+        let e = try getEphemeralKey(e: self.e, re: self.re, own: self.initiator)
+        self.symmetricState.mixHash(data: Data(e))
+      default:
+        throw HandshakeStateError.invalidPremessagePattern
+      }
     }
 
     for token in patternDetails!.responderPremessages {
       switch token {
-        case .s:
-          let s = try getStaticKey(s: self.s, rs: self.rs, own: !self.initiator)
-          self.symmetricState.mixHash(data: Data(s))
-        case .e:
-          let e = try getEphemeralKey(e: self.e, re: self.re, own: !self.initiator)
-          self.symmetricState.mixHash(data: Data(e))
-        default:
-          throw HandshakeStateError.invalidPremessagePattern
-      } 
+      case .s:
+        let s = try getStaticKey(s: self.s, rs: self.rs, own: !self.initiator)
+        self.symmetricState.mixHash(data: Data(s))
+      case .e:
+        let e = try getEphemeralKey(e: self.e, re: self.re, own: !self.initiator)
+        self.symmetricState.mixHash(data: Data(e))
+      default:
+        throw HandshakeStateError.invalidPremessagePattern
+      }
     }
 
     // Sets message_patterns to the message patterns from handshake_pattern.
@@ -282,83 +282,83 @@ public class HandshakeState {
     // processes each token from the message pattern:
     for token in messagePattern {
       switch token {
-        // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
-        // buffer. Calls MixHash(e.public_key).
-        case .e:
-          #if !DEBUG
-          if self.e != nil {
-            throw HandshakeStateError.ephemeralKeyAlreadyExist
-          }
-          #endif
-          let e = try self.e ?? self.curveHelper.generateKeyPair()
-          self.e = e
-          out.append(Data(e.publicKey))
-          self.symmetricState.mixHash(data: Data(e.publicKey))
-        // For "s": Appends EncryptAndHash(s.public_key) to the buffer.
-        case .s:
-          if self.s == nil {
-            throw HandshakeStateError.missingStaticKey
-          }
-          let s = self.s!.publicKey
-          out.append(try self.symmetricState.encryptAndHash(plaintext: Data(s)))
-        // For "ee": Calls MixKey(DH(e, re)).
-        case .ee:
+      // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
+      // buffer. Calls MixHash(e.public_key).
+      case .e:
+        #if !DEBUG
+        if self.e != nil {
+          throw HandshakeStateError.ephemeralKeyAlreadyExist
+        }
+        #endif
+        let e = try self.e ?? self.curveHelper.generateKeyPair()
+        self.e = e
+        out.append(Data(e.publicKey))
+        self.symmetricState.mixHash(data: Data(e.publicKey))
+      // For "s": Appends EncryptAndHash(s.public_key) to the buffer.
+      case .s:
+        if self.s == nil {
+          throw HandshakeStateError.missingStaticKey
+        }
+        let s = self.s!.publicKey
+        out.append(try self.symmetricState.encryptAndHash(plaintext: Data(s)))
+      // For "ee": Calls MixKey(DH(e, re)).
+      case .ee:
+        if self.e == nil {
+          throw HandshakeStateError.missingEphemeralKey
+        } else if self.re == nil {
+          throw HandshakeStateError.missingRemoteEphemeralKey
+        }
+        let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
+        try self.symmetricState.mixKey(inputKeyMaterial: dh)
+      // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
+      case .es:
+        if self.initiator {
           if self.e == nil {
             throw HandshakeStateError.missingEphemeralKey
-          } else if self.re == nil {
-            throw HandshakeStateError.missingRemoteEphemeralKey
-          }
-          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
-          try self.symmetricState.mixKey(inputKeyMaterial: dh)
-        // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
-        case .es:
-          if self.initiator {
-            if self.e == nil {
-              throw HandshakeStateError.missingEphemeralKey
-            } else if self.rs == nil {
-              throw HandshakeStateError.missingRemoteStaticKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          } else {
-            if self.s == nil {
-              throw HandshakeStateError.missingStaticKey
-            } else if self.re == nil {
-              throw HandshakeStateError.missingRemoteEphemeralKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          }
-        // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
-        case .se:
-          if !self.initiator {
-            if self.e == nil {
-              throw HandshakeStateError.missingEphemeralKey
-            } else if self.rs == nil {
-              throw HandshakeStateError.missingRemoteStaticKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          } else {
-            if self.s == nil {
-              throw HandshakeStateError.missingStaticKey
-            } else if self.re == nil {
-              throw HandshakeStateError.missingRemoteEphemeralKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          }
-        // For "ss": Calls MixKey(DH(s, rs)).
-        case .ss:
-          if self.s == nil {
-            throw HandshakeStateError.missingStaticKey
           } else if self.rs == nil {
             throw HandshakeStateError.missingRemoteStaticKey
           }
-          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
-        default:
-          throw HandshakeStateError.invalidMessagePattern
+        } else {
+          if self.s == nil {
+            throw HandshakeStateError.missingStaticKey
+          } else if self.re == nil {
+            throw HandshakeStateError.missingRemoteEphemeralKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        }
+      // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
+      case .se:
+        if !self.initiator {
+          if self.e == nil {
+            throw HandshakeStateError.missingEphemeralKey
+          } else if self.rs == nil {
+            throw HandshakeStateError.missingRemoteStaticKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        } else {
+          if self.s == nil {
+            throw HandshakeStateError.missingStaticKey
+          } else if self.re == nil {
+            throw HandshakeStateError.missingRemoteEphemeralKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        }
+      // For "ss": Calls MixKey(DH(s, rs)).
+      case .ss:
+        if self.s == nil {
+          throw HandshakeStateError.missingStaticKey
+        } else if self.rs == nil {
+          throw HandshakeStateError.missingRemoteStaticKey
+        }
+        let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
+        try self.symmetricState.mixKey(inputKeyMaterial: dh)
+      default:
+        throw HandshakeStateError.invalidMessagePattern
       }
     }
     // Appends EncryptAndHash(payload) to the buffer.
@@ -379,87 +379,87 @@ public class HandshakeState {
     // processes each token from the message pattern:
     for token in messagePattern {
       switch token {
-        // For "e": Sets re (which must be empty) to the next DHLEN bytes from the message. Calls
-        // MixHash(re.public_key).
-        case .e:
-          if messageBuffer.count < 32 {
-            throw HandshakeStateError.messageTooShort
-          }
-          let re = PublicKey(messageBuffer.prefix(32))
-          self.re = re
-          messageBuffer = messageBuffer.suffix(messageBuffer.count - 32)
-          self.symmetricState.mixHash(data: Data(re))
-        // For "s": Sets temp to the next DHLEN + 16 bytes of the message if HasKey() == True, or to
-        // the next DHLEN bytes otherwise. Sets rs (which must be empty) to DecryptAndHash(temp).
-        case .s:
-          if self.rs != nil {
-            throw HandshakeStateError.staticKeyAlreadyExist
-          }
-          let size = self.symmetricState.cipherState.hasKey() ? 48 : 32
-          if messageBuffer.count < size {
-            throw HandshakeStateError.messageTooShort
-          }
-          let rs = PublicKey(try self.symmetricState.decryptAndHash(ciphertext: messageBuffer.prefix(size)))
-          messageBuffer = messageBuffer.suffix(messageBuffer.count - size)
-          self.rs = rs
-        // For "ee": Calls MixKey(DH(e, re)).
-        case .ee:
+      // For "e": Sets re (which must be empty) to the next DHLEN bytes from the message. Calls
+      // MixHash(re.public_key).
+      case .e:
+        if messageBuffer.count < 32 {
+          throw HandshakeStateError.messageTooShort
+        }
+        let re = PublicKey(messageBuffer.prefix(32))
+        self.re = re
+        messageBuffer = messageBuffer.suffix(messageBuffer.count - 32)
+        self.symmetricState.mixHash(data: Data(re))
+      // For "s": Sets temp to the next DHLEN + 16 bytes of the message if HasKey() == True, or to
+      // the next DHLEN bytes otherwise. Sets rs (which must be empty) to DecryptAndHash(temp).
+      case .s:
+        if self.rs != nil {
+          throw HandshakeStateError.staticKeyAlreadyExist
+        }
+        let size = self.symmetricState.cipherState.hasKey() ? 48 : 32
+        if messageBuffer.count < size {
+          throw HandshakeStateError.messageTooShort
+        }
+        let rs = PublicKey(try self.symmetricState.decryptAndHash(ciphertext: messageBuffer.prefix(size)))
+        messageBuffer = messageBuffer.suffix(messageBuffer.count - size)
+        self.rs = rs
+      // For "ee": Calls MixKey(DH(e, re)).
+      case .ee:
+        if self.e == nil {
+          throw HandshakeStateError.missingEphemeralKey
+        } else if self.re == nil {
+          throw HandshakeStateError.missingRemoteEphemeralKey
+        }
+        let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
+        try self.symmetricState.mixKey(inputKeyMaterial: dh)
+      // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
+      case .es:
+        if self.initiator {
           if self.e == nil {
             throw HandshakeStateError.missingEphemeralKey
-          } else if self.re == nil {
-            throw HandshakeStateError.missingRemoteEphemeralKey
-          }
-          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.re!)
-          try self.symmetricState.mixKey(inputKeyMaterial: dh)
-        // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
-        case .es:
-          if self.initiator {
-            if self.e == nil {
-              throw HandshakeStateError.missingEphemeralKey
-            } else if self.rs == nil {
-              throw HandshakeStateError.missingRemoteStaticKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          } else {
-            if self.s == nil {
-              throw HandshakeStateError.missingStaticKey
-            } else if self.re == nil {
-              throw HandshakeStateError.missingRemoteEphemeralKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          }
-        // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
-        case .se:
-          if !self.initiator {
-            if self.e == nil {
-              throw HandshakeStateError.missingEphemeralKey
-            } else if self.rs == nil {
-              throw HandshakeStateError.missingRemoteStaticKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          } else {
-            if self.s == nil {
-              throw HandshakeStateError.missingStaticKey
-            } else if self.re == nil {
-              throw HandshakeStateError.missingRemoteEphemeralKey
-            }
-            let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
-            try self.symmetricState.mixKey(inputKeyMaterial: dh)
-          }
-        // For "ss": Calls MixKey(DH(s, rs)).
-        case .ss:
-          if self.s == nil {
-            throw HandshakeStateError.missingStaticKey
           } else if self.rs == nil {
             throw HandshakeStateError.missingRemoteStaticKey
           }
-          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
           try self.symmetricState.mixKey(inputKeyMaterial: dh)
-        default:
-          throw HandshakeStateError.invalidMessagePattern
+        } else {
+          if self.s == nil {
+            throw HandshakeStateError.missingStaticKey
+          } else if self.re == nil {
+            throw HandshakeStateError.missingRemoteEphemeralKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        }
+      // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
+      case .se:
+        if !self.initiator {
+          if self.e == nil {
+            throw HandshakeStateError.missingEphemeralKey
+          } else if self.rs == nil {
+            throw HandshakeStateError.missingRemoteStaticKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.e!, publicKey: self.rs!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        } else {
+          if self.s == nil {
+            throw HandshakeStateError.missingStaticKey
+          } else if self.re == nil {
+            throw HandshakeStateError.missingRemoteEphemeralKey
+          }
+          let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.re!)
+          try self.symmetricState.mixKey(inputKeyMaterial: dh)
+        }
+      // For "ss": Calls MixKey(DH(s, rs)).
+      case .ss:
+        if self.s == nil {
+          throw HandshakeStateError.missingStaticKey
+        } else if self.rs == nil {
+          throw HandshakeStateError.missingRemoteStaticKey
+        }
+        let dh = try self.curveHelper.dh(keyPair: self.s!, publicKey: self.rs!)
+        try self.symmetricState.mixKey(inputKeyMaterial: dh)
+      default:
+        throw HandshakeStateError.invalidMessagePattern
       }
     }
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into

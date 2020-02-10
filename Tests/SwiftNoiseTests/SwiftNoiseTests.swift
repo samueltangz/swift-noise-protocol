@@ -5,7 +5,11 @@ func getKeyPair(curveHelper: Curve, secretKey: Data?) -> KeyPair? {
   if secretKey == nil {
     return nil
   }
-  return try! curveHelper.constructKeyPair(secretKey: secretKey!)
+  do {
+    return try curveHelper.constructKeyPair(secretKey: secretKey!)
+  } catch {
+    return nil
+  }
 }
 
 final class SwiftNoiseTests: XCTestCase {
