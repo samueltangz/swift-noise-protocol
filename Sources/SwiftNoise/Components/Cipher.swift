@@ -25,8 +25,8 @@ protocol Cipher {
 
 class AESGCM: Cipher {
   // A helper method to convert Nonce (which is a 64-bit unsigned integer) to AES.GCM.Nonce.
-  func nonceToAESGCMNonce(n: Nonce) -> AES.GCM.Nonce {
-    return try! AES.GCM.Nonce(
+  func nonceToAESGCMNonce(n: Nonce) throws -> AES.GCM.Nonce {
+    return try AES.GCM.Nonce(
       data: [
         0, 0, 0, 0,
         UInt8(truncatingIfNeeded: n>>56),
@@ -41,13 +41,13 @@ class AESGCM: Cipher {
   }
 
   func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
-    let nonce = nonceToAESGCMNonce(n: n)
+    let nonce = try nonceToAESGCMNonce(n: n)
     let sealedBox = try AES.GCM.seal(plaintext, using: SymmetricKey(data: k), nonce: nonce, authenticating: ad)
     return sealedBox.ciphertext + sealedBox.tag
   }
 
   func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
-    let nonce = nonceToAESGCMNonce(n: n)
+    let nonce = try nonceToAESGCMNonce(n: n)
     let sealedBox = try AES.GCM.SealedBox(combined: nonce + ciphertext)
     return try AES.GCM.open(sealedBox, using: SymmetricKey(data: k), authenticating: ad)
   }
@@ -59,8 +59,8 @@ class AESGCM: Cipher {
 
 class CCP: Cipher {
   // A helper method to convert Nonce (which is a 64-bit unsigned integer) to ChaChaPoly.Nonce.
-  func nonceToChaChaPolyNonce(n: Nonce) -> ChaChaPoly.Nonce {
-    return try! ChaChaPoly.Nonce(
+  func nonceToChaChaPolyNonce(n: Nonce) throws -> ChaChaPoly.Nonce {
+    return try ChaChaPoly.Nonce(
       data: [
         0, 0, 0, 0,
         UInt8(truncatingIfNeeded: n>>0),
@@ -75,13 +75,13 @@ class CCP: Cipher {
   }
 
   func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
-    let nonce = nonceToChaChaPolyNonce(n: n)
+    let nonce = try nonceToChaChaPolyNonce(n: n)
     let sealedBox = try ChaChaPoly.seal(plaintext, using: SymmetricKey(data: k), nonce: nonce, authenticating: ad)
     return sealedBox.ciphertext + sealedBox.tag
   }
 
   func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
-    let nonce = nonceToChaChaPolyNonce(n: n)
+    let nonce = try nonceToChaChaPolyNonce(n: n)
     let sealedBox = try ChaChaPoly.SealedBox(combined: nonce + ciphertext)
     return try ChaChaPoly.open(sealedBox, using: SymmetricKey(data: k), authenticating: ad)
   }

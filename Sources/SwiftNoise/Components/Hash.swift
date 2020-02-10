@@ -37,7 +37,6 @@ extension HashedAuthenticationCode {
   var data: Data { Data(self.bytes) }
 }
 
-
 class S256: Hash {
   func hash(data: Data) -> Data {
     let digest = SHA256.hash(data: data)
