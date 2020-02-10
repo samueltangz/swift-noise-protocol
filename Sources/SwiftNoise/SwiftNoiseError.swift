@@ -12,3 +12,11 @@ enum HandshakeStateError: Error {
   case completedHandshake
   case messageTooShort
 }
+
+enum NonceError: Error {
+  case nonceOverflow
+}
+
+enum CipherStateError: Error {
+  case invalidKeySize
+}
