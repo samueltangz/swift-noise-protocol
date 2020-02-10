@@ -20,3 +20,13 @@ enum NonceError: Error {
 enum CipherStateError: Error {
   case invalidKeySize
 }
+
+enum CipherError: Error {
+  case cannotInstantiateCipher(error: Error)
+  case invalidPlaintext(error: Error)
+  case invalidCiphertext(error: Error)
+}
+
+enum DHError: Error {}
+
+enum HashError: Error {}
