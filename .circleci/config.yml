@@ -4,18 +4,31 @@
 version: 2.1
 
 jobs:
-  build:
-
+  build-and-test:
     macos:
       xcode: 11.0.0 # Specify the Xcode version to use
-
     steps:
       - checkout
       - run: swift build
       - run: swift test
-
       - store_test_results:
           path: test_output
       - store_artifacts:
           path: test_output
           destination: scan-output
+  swiftlint:
+    docker:
+      - image: dantoml/swiftlint:latest
+    steps:
+      - checkout
+      - run: swiftlint lint --reporter junit | tee result.xml
+      - store_artifacts:
+          path: result.xml
+      - store_test_results:
+          path: result.xml
+
+workflows:
+  build-test:
+    jobs:
+      - swiftlint
+      - build-and-test
