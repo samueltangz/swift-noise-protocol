@@ -34,7 +34,7 @@ final class SwiftNoiseTests: XCTestCase {
     "Noise_IK_25519_AESGCM_SHA256",
     "Noise_IX_25519_AESGCM_SHA256"
   ]
-  
+
   func testSnowVectors() throws {
     let curveHelper = C25519()
 
@@ -47,7 +47,7 @@ final class SwiftNoiseTests: XCTestCase {
       if !supportedCipherSuites.contains(testVector.protocolName) {
         return
       }
-      let pattern = try getPatternFromProtocolName(protocolName: testVector.protocolName)
+      let pattern = try getHandshakePatternFromProtocolName(protocolName: testVector.protocolName)
       let initiatorState = try HandshakeState(
         pattern: pattern,
         initiator: true,
@@ -87,7 +87,7 @@ enum TestError: Error {
   case invalidProtocolName
 }
 
-func getPatternFromProtocolName(protocolName: String) throws -> HandshakePattern {
+func getHandshakePatternFromProtocolName(protocolName: String) throws -> HandshakePattern {
   let components = protocolName.components(separatedBy: "_")
   if components.count != 5 {
     throw TestError.invalidProtocolName

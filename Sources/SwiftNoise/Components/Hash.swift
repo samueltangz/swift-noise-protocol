@@ -35,10 +35,10 @@ class SHA256: Hash {
   }
 
   func hkdf(chainingKey: Data, inputKeyMaterial: Data, numOutputs: UInt8) throws -> [Data] {
-    if (numOutputs < 2) {
+    if numOutputs < 2 {
       throw HashError.tooLittleOutputs
     }
-    if (numOutputs > 3) {
+    if numOutputs > 3 {
       throw HashError.tooManyOutputs
     }
     let tempKey = Data(try self.hmac(key: chainingKey, data: inputKeyMaterial))
