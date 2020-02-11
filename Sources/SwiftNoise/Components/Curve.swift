@@ -1,6 +1,5 @@
 import Foundation
-import CryptoSwift
-import CryptoKit25519
+import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
 public protocol Curve {
@@ -26,6 +25,11 @@ public protocol Curve {
   var dhlen: Int { get }
 }
 
+// An extension on CryptoKit's SharedSecret to return Data
+extension SharedSecret {
+  var data: Data { Data(self.withUnsafeBytes { $0 }) }
+}
+
 public class C25519: Curve {
   public init() {}
 
@@ -44,7 +48,7 @@ public class C25519: Curve {
   }
 
   public func generateKeyPair() throws -> KeyPair {
-    let secretKey = Data(AES.randomIV(32))
+    let secretKey = Curve25519.Signing.PrivateKey().rawRepresentation
     return try constructKeyPair(secretKey: secretKey)
   }
 
@@ -53,7 +57,7 @@ public class C25519: Curve {
       rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
     let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
     let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
-    return sharedKey.rawData
+    return sharedKey.data
   }
 
   public var dhlen: Int = 32
