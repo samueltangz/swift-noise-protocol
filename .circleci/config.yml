@@ -26,9 +26,19 @@ jobs:
       - store_artifacts:
           path: test_output
           destination: scan-output
+  docs:
+    macos:
+      xcode: 11.2.1
+    steps:
+      - checkout
+      - run: cd scripts && bash generate_docs.sh
+      # TODO: cache
 
 workflows:
   build-test:
     jobs:
       - lint
       - test
+  documentation:
+    jobs:
+      - docs
