@@ -16,7 +16,7 @@ jobs:
           path: result.json
   test:
     macos:
-      xcode: 11.2.1
+      xcode: 11.0.0 # Specify the Xcode version to use
     steps:
       - checkout
       - run: swift build

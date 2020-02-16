@@ -81,11 +81,9 @@ The handshake patterns defined in [session 7 of the specification](https://noise
 The following is an example usage for Noise with `Noise_X_25519_AESGCM_SHA256`.
 
 ```swift
-let curveHelper = C25519()
-
-let responderStaticKeyPair = try! curveHelper.generateKeyPair()
-let initiatorEphemeralKeyPair = try! curveHelper.generateKeyPair()
-let responderEphemeralKeyPair = try! curveHelper.generateKeyPair()
+let responderStaticKeyPair = try! generateKeyPair()
+let initiatorEphemeralKeyPair = try! generateKeyPair()
+let responderEphemeralKeyPair = try! generateKeyPair()
 
 let prologue = Data()
 
