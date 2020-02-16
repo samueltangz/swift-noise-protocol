@@ -10,7 +10,7 @@ public class CipherState {
 
   var cipherHelper: Cipher
 
-  init(cipherHelper: Cipher, key: Data? = nil) throws {
+  init(key: Data? = nil) throws {
     if key != nil && key!.count != 32 {
       throw CipherStateError.invalidKeySize
     }
@@ -19,7 +19,7 @@ public class CipherState {
     // Sets n = 0.
     self.n = 0
 
-    self.cipherHelper = cipherHelper
+    self.cipherHelper = AESGCM()
   }
   func hasKey() -> Bool {
     // Returns true if k is non-empty, false otherwise.

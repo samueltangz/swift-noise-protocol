@@ -1,5 +1,5 @@
 import Foundation
-import Crypto
+import CryptoSwift
 
 // https://noiseprotocol.org/noise.html#hash-functions
 protocol Hash {
@@ -25,27 +25,13 @@ protocol Hash {
   var blocklen: Int { get }
 }
 
-// An extension on CryptoKit's SHA256.Digest to return Data
-extension SHA256.Digest {
-  var bytes: [UInt8] { Array(self.makeIterator()) }
-  var data: Data { Data(self.bytes) }
-}
-
-// An extension on CryptoKit's SharedSecret to return Data
-extension HashedAuthenticationCode {
-  var bytes: [UInt8] { Array(self.makeIterator()) }
-  var data: Data { Data(self.bytes) }
-}
-
-class S256: Hash {
+class SHA256: Hash {
   func hash(data: Data) -> Data {
-    let digest = SHA256.hash(data: data)
-    return digest.data
+    return Data(Digest.sha256(data.bytes))
   }
 
-  func hmac(key: Data, data: Data) -> Data {
-    let h = HMAC<SHA256>.authenticationCode(for: data, using: SymmetricKey(data: key))
-    return h.data
+  func hmac(key: Data, data: Data) throws -> Data {
+    return Data(try HMAC(key: key.bytes, variant: .sha256).authenticate(data.bytes))
   }
 
   func hkdf(chainingKey: Data, inputKeyMaterial: Data, numOutputs: UInt8) throws -> [Data] {
@@ -55,11 +41,11 @@ class S256: Hash {
     if numOutputs > 3 {
       throw HashError.tooManyOutputs
     }
-    let tempKey = self.hmac(key: chainingKey, data: inputKeyMaterial)
+    let tempKey = Data(try self.hmac(key: chainingKey, data: inputKeyMaterial))
     var lastOutput: Data = Data()
     var outputs: [Data] = []
     for index in 1...numOutputs {
-      lastOutput = self.hmac(key: tempKey, data: lastOutput + [index])
+      lastOutput = Data(try self.hmac(key: tempKey, data: lastOutput + [index]))
       outputs.append(lastOutput)
     }
     return outputs
