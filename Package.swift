@@ -1,17 +1,22 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
   name: "SwiftNoise",
+  platforms: [
+    .macOS(.v10_15),
+    .iOS(.v13),
+    .watchOS(.v6),
+    .tvOS(.v13),
+  ],
   products: [
     .library(name: "SwiftNoise", targets: ["SwiftNoise"])
   ],
   dependencies: [
     // Dependencies declare other packages that this package depends on.
-    .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.3.0"),
-    .package(url: "https://github.com/christophhagen/CryptoKit25519", .exact("0.4.2"))
+    .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
   ],
   targets: [
     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -19,13 +24,14 @@ let package = Package(
     .target(
       name: "SwiftNoise",
       dependencies: [
-        "CryptoSwift",
-        "CryptoKit25519"
+        .product(name: "Crypto", package: "swift-crypto")
       ]),
     .testTarget(
       name: "SwiftNoiseTests",
-      dependencies: [
-        "SwiftNoise"
-      ])
+      dependencies: ["SwiftNoise"],
+      resources: [
+        .copy("SnowTestVectors.json")
+      ]
+    )
   ]
 )

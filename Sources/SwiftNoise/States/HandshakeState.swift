@@ -124,7 +124,7 @@ public class HandshakeState {
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
     self.symmetricState = try SymmetricState(protocolName: protocolName)
 
-    self.curveHelper = C25519()
+    self.curveHelper = Curves.C25519()
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -178,6 +178,7 @@ public class HandshakeState {
 
 // Maintains the helper functions for the handshake state. Those function should be kept private.
 extension HandshakeState {
+
   // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
   // buffer. Calls MixHash(e.public_key).
   private func writeE() throws -> Data {
@@ -191,11 +192,13 @@ extension HandshakeState {
     self.symmetricState.mixHash(data: e.publicKey)
     return e.publicKey
   }
+
   // For "s": Appends EncryptAndHash(s.public_key) to the buffer.
   private func writeS() throws -> Data {
     let s = try self.getPublicKey(own: true, key: .s)
     return try self.symmetricState.encryptAndHash(plaintext: s)
   }
+
   // For "ee": Calls MixKey(DH(e, re)).
   private func writeEE() throws -> Data {
     let e = try self.getKeyPair(key: .e)
@@ -204,6 +207,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
   private func writeES() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
@@ -212,6 +216,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
   private func writeSE() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
@@ -220,6 +225,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "ss": Calls MixKey(DH(s, rs)).
   private func writeSS() throws -> Data {
     let s = try self.getKeyPair(key: .s)
@@ -228,6 +234,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   private func dispatchWriteToken(token: Token) throws -> Data {
     switch token {
     case .e:
@@ -258,6 +265,7 @@ extension HandshakeState {
     self.symmetricState.mixHash(data: re)
     return messageBuffer.suffix(messageBuffer.count - 32)
   }
+
   // For "s": Sets temp to the next DHLEN + 16 bytes of the message if HasKey() == True, or to
   // the next DHLEN bytes otherwise. Sets rs (which must be empty) to DecryptAndHash(temp).
   private func readS(_ messageBuffer: Data) throws -> Data {
@@ -272,6 +280,7 @@ extension HandshakeState {
     self.rs = rs
     return messageBuffer.suffix(messageBuffer.count - size)
   }
+
   // For "ee": Calls MixKey(DH(e, re)).
   private func readEE(_ messageBuffer: Data) throws -> Data {
     let e = try self.getKeyPair(key: .e)
@@ -280,6 +289,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
   private func readES(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
@@ -288,6 +298,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
   private func readSE(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
@@ -296,6 +307,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "ss": Calls MixKey(DH(s, rs)).
   private func readSS(_ messageBuffer: Data) throws -> Data {
     let s = try self.getKeyPair(key: .s)
@@ -304,6 +316,7 @@ extension HandshakeState {
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   private func dispatchReadToken(_ messageBuffer: Data, token: Token) throws -> Data {
     switch token {
     case .e:
@@ -325,6 +338,7 @@ extension HandshakeState {
 }
 
 extension HandshakeState {
+
   public func writeMessage(payload: Data) throws -> Data {
     if self.messagePatterns.count == 0 {
       throw HandshakeStateError.completedHandshake

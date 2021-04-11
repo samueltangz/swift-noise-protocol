@@ -2,14 +2,10 @@ import XCTest
 import SwiftNoise
 
 func getKeyPair(curveHelper: Curve, secretKey: Data?) -> KeyPair? {
-  if secretKey == nil {
+  guard let secret = secretKey else {
     return nil
   }
-  do {
-    return try curveHelper.constructKeyPair(secretKey: secretKey!)
-  } catch {
-    return nil
-  }
+  return try? curveHelper.constructKeyPair(secretKey: secret)
 }
 
 final class SwiftNoiseTests: XCTestCase {
@@ -35,21 +31,36 @@ final class SwiftNoiseTests: XCTestCase {
     "Noise_IX_25519_AESGCM_SHA256",
   ]
 
-  func testSnowVectors() throws {
-    let curveHelper = C25519()
+  func loadTestVectors() throws -> [SnowTestVector]? {
+    guard let url = Bundle.module.url(forResource: "SnowTestVectors", withExtension: "json") else {
+      return nil
+    }
 
-    let path = Bundle(path: "Tests/SwiftNoiseTests")!.path(forResource: "SnowTestVectors", ofType: "json")
-    let url = URL(fileURLWithPath: path!)
     let data = try Data(contentsOf: url)
     let json = try JSONDecoder().decode(SnowTestVectors.self, from: data)
-    let testVectors = json.vectors
-    try testVectors.forEach { testVector in
+
+    return json.vectors
+  }
+
+  func testSnowVectors() throws {
+    guard let testVectors = try self.loadTestVectors() else {
+      return XCTFail("Unable to load resource 'SnowTestVectors.json'")
+    }
+
+    let curveHelper = Curves.C25519()
+
+    for testVector in testVectors {
       if !supportedCipherSuites.contains(testVector.protocolName) {
-        return
+        // print("unsupported cipher suite: \(testVector.protocolName)")
+        continue
       }
-      let pattern = try getHandshakePatternFromProtocolName(protocolName: testVector.protocolName)
+
+      print("Running test vector for \(testVector.protocolName)")
+
+      let handshakePattern = try getHandshakePatternFromProtocolName(protocolName: testVector.protocolName)
+
       let initiatorState = try HandshakeState(
-        pattern: pattern,
+        pattern: handshakePattern,
         initiator: true,
         prologue: testVector.initPrologue,
         s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initStatic),
@@ -58,7 +69,7 @@ final class SwiftNoiseTests: XCTestCase {
       )
 
       let responderState = try HandshakeState(
-        pattern: pattern,
+        pattern: handshakePattern,
         initiator: false,
         prologue: testVector.respPrologue,
         s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respStatic),
@@ -75,9 +86,10 @@ final class SwiftNoiseTests: XCTestCase {
         let receiverState = states[(index & 1) ^ 1]
 
         let ciphertext = try senderState.writeMessage(payload: message.payload)
+        XCTAssertEqual(ciphertext, message.ciphertext)
+
         let payload = try receiverState.readMessage(message: ciphertext)
         XCTAssertEqual(payload, message.payload)
-        XCTAssertEqual(ciphertext, message.ciphertext)
       }
     }
   }
@@ -87,12 +99,35 @@ enum TestError: Error {
   case invalidProtocolName
 }
 
-func getHandshakePatternFromProtocolName(protocolName: String) throws -> HandshakePattern {
-  let components = protocolName.components(separatedBy: "_")
-  if components.count != 5 {
+func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: Curve, cipher: Cipher, hash: Hash) {
+  let components = name.components(separatedBy: "_")
+
+  guard components.count == 5 else {
     throw TestError.invalidProtocolName
   }
-  return HandshakePattern(rawValue: components[1])!
+
+  guard let handshake = HandshakePattern(rawValue: components[1]) else {
+    throw TestError.invalidProtocolName
+  }
+
+  guard let curve = Curves.curve(named: components[2]) else {
+    throw TestError.invalidProtocolName
+  }
+
+  guard let cipher = Ciphers.cipher(named: components[3]) else {
+    throw TestError.invalidProtocolName
+  }
+
+  guard let hash = Hashes.hash(named: components[4]) else {
+    throw TestError.invalidProtocolName
+  }
+
+  return (handshake: handshake, dh: curve, cipher: cipher, hash: hash)
+}
+
+func getHandshakePatternFromProtocolName(protocolName: String) throws -> HandshakePattern {
+  let components = try protocolComponents(name: protocolName)
+  return components.handshake
 }
 
 struct SnowTestVectors: Codable {
@@ -175,5 +210,80 @@ extension KeyedDecodingContainer {
     }
     let hexString = try self.decode(String.self, forKey: key)
     return Data(hex: hexString)
+  }
+}
+
+extension Data {
+  public init(hex: String) {
+    self.init(Array<UInt8>(hex: hex))
+  }
+
+  public var bytes: Array<UInt8> {
+    Array(self)
+  }
+
+  public func toHexString() -> String {
+    self.bytes.toHexString()
+  }
+}
+
+extension Array where Element == UInt8 {
+  public init(hex: String) {
+    self.init(reserveCapacity: hex.unicodeScalars.lazy.underestimatedCount)
+    var buffer: UInt8?
+    var skip = hex.hasPrefix("0x") ? 2 : 0
+    for char in hex.unicodeScalars.lazy {
+      guard skip == 0 else {
+        skip -= 1
+        continue
+      }
+      guard char.value >= 48 && char.value <= 102 else {
+        removeAll()
+        return
+      }
+      let v: UInt8
+      let c: UInt8 = UInt8(char.value)
+      switch c {
+      case let c where c <= 57:
+        v = c - 48
+      case let c where c >= 65 && c <= 70:
+        v = c - 55
+      case let c where c >= 97:
+        v = c - 87
+      default:
+        removeAll()
+        return
+      }
+      if let b = buffer {
+        append(b << 4 | v)
+        buffer = nil
+      } else {
+        buffer = v
+      }
+    }
+    if let b = buffer {
+      append(b)
+    }
+  }
+
+  public func toHexString() -> String {
+    `lazy`.reduce(into: "") {
+      var s = String($1, radix: 16)
+      if s.count == 1 {
+        s = "0" + s
+      }
+      $0 += s
+    }
+  }
+}
+
+extension Array {
+  init(reserveCapacity: Int) {
+    self = Array<Element>()
+    self.reserveCapacity(reserveCapacity)
+  }
+
+  var slice: ArraySlice<Element> {
+    self[self.startIndex..<self.endIndex]
   }
 }

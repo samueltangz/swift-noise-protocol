@@ -1,18 +1,18 @@
 import Foundation
-import CryptoSwift
+import Crypto
 
 // https://noiseprotocol.org/noise.html#the-symmetricstate-object
 public class SymmetricState {
   // ck: A chaining key of HASHLEN bytes.
-  var ck: Data
+  private var ck: Data
   // h: A hash output of HASHLEN bytes.
-  var h: Data
+  private var h: Data
   var cipherState: CipherState
 
-  var hashHelper: Hash
+  private let hashHelper: Hash
 
   init(protocolName: String) throws {
-    self.hashHelper = SHA256()
+    self.hashHelper = Hashes.SHA256()
 
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
