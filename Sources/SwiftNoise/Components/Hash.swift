@@ -28,12 +28,14 @@ public protocol Hash {
 }
 
 public enum Hashes {
-  public static let supported = [SHA256.identifier]
+  public static let supported = [SHA256.identifier, SHA512.identifier]
 
   public static func hash(named name: String) -> Hash? {
     switch name {
     case SHA256.identifier:
       return Hashes.SHA256()
+    case SHA512.identifier:
+      return Hashes.SHA512()
     default:
       return nil
     }
@@ -74,5 +76,40 @@ extension Hashes {
     let hashlen: Int = 32
     let blocklen: Int = 64
   }
+}
 
+extension Hashes {
+  struct SHA512: Hash {
+    static let identifier: String = "SHA512"
+
+    func hash(data: Data) -> Data {
+      return Data(Crypto.SHA512.hash(data: data))
+    }
+
+    func hmac(key: Data, data: Data) throws -> Data {
+      let key = SymmetricKey(data: key)
+      let hmac = Crypto.HMAC<Crypto.SHA512>.authenticationCode(for: data, using: key)
+      return Data(hmac)
+    }
+
+    func hkdf(chainingKey: Data, inputKeyMaterial: Data, numOutputs: UInt8) throws -> [Data] {
+      if numOutputs < 2 {
+        throw HashError.tooLittleOutputs
+      }
+      if numOutputs > 3 {
+        throw HashError.tooManyOutputs
+      }
+      let tempKey = Data(try self.hmac(key: chainingKey, data: inputKeyMaterial))
+      var lastOutput: Data = Data()
+      var outputs: [Data] = []
+      for index in 1...numOutputs {
+        lastOutput = Data(try self.hmac(key: tempKey, data: lastOutput + [index]))
+        outputs.append(lastOutput)
+      }
+      return outputs
+    }
+
+    let hashlen: Int = 64
+    let blocklen: Int = 128
+  }
 }

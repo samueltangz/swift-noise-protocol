@@ -22,8 +22,8 @@ public class SymmetricState {
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
     // Otherwise sets h = HASH(protocol_name).
     let h = Data(protocolName.utf8)
-    if h.count <= 32 {
-      self.h = h + Data(repeating: 0, count: 32 - h.count)
+    if h.count <= components.hash.hashlen {
+      self.h = h + Data(repeating: 0, count: components.hash.hashlen - h.count)
     } else {
       self.h = self.hashFunction.hash(data: h)
     }
@@ -38,9 +38,13 @@ public class SymmetricState {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
     let hkdfOutput = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 2)
     self.ck = hkdfOutput[0]
-    let tempK = hkdfOutput[1]
+
+    var tempK = hkdfOutput[1]
 
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
+    if self.hashFunction.hashlen == 64 {
+      tempK = tempK.prefix(32)
+    }
 
     // Calls InitializeKey(temp_k).
     self.cipherState = try CipherState(key: tempK, cipher: self.cipher)
@@ -56,12 +60,16 @@ public class SymmetricState {
     let hkdfOutput = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 3)
     self.ck = hkdfOutput[0]
     let tempH = hkdfOutput[1]
-    let tempK = hkdfOutput[2]
 
     // Calls MixHash(temp_h).
     self.mixHash(data: tempH)
 
+    var tempK = hkdfOutput[2]
+
     // If HASHLEN is 64, then truncates temp_k to 32 bytes.
+    if self.hashFunction.hashlen == 64 {
+      tempK = tempK.prefix(32)
+    }
 
     // Calls InitializeKey(temp_k).
     self.cipherState = try CipherState(key: tempK, cipher: self.cipher)
@@ -91,10 +99,15 @@ public class SymmetricState {
   func split() throws -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).
     let tempKs = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: Data(), numOutputs: 2)
-    let tempK1 = tempKs[0]
-    let tempK2 = tempKs[1]
+
+    var tempK1 = tempKs[0]
+    var tempK2 = tempKs[1]
 
     // If HASHLEN is 64, then truncates temp_k1 and temp_k2 to 32 bytes.
+    if self.hashFunction.hashlen == 64 {
+      tempK1 = tempK1.prefix(32)
+      tempK2 = tempK2.prefix(32)
+    }
 
     // Creates two new CipherState objects c1 and c2.
     // Calls c1.InitializeKey(temp_k1) and c2.InitializeKey(temp_k2).
