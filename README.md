@@ -31,8 +31,6 @@ targets: (
 import SwiftNoise
 ```
 
-
-
 ## Supported features
 
 ### DH functions, cipher functions, and hash functions
@@ -107,3 +105,12 @@ let initiatorTx = try! initiatorState.writeMessage(payload: Data())
 assert(try! responderState.readMessage(message: initiatorTx) == Data())
 assert(responderState.remoteE! == initiatorEphemeralKeyPair.publicKey)
 ```
+
+# Development
+
+## Code Format
+
+We use swift-format for automatic code formatting.
+
+ - Download via homebrew: `brew install swift-format`
+ - Run formatter: `swift-format -i --configuration=swift-format.json */**/**/*.swift`

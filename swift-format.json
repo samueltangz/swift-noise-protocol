@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "indentation": {
+    "spaces": 2,
+  },
+  "lineLength": 200,
+  "rules": {
+    "OrderedImports": false,
+    "NoEmptyTrailingClosureParentheses": false,
+  },
+}
