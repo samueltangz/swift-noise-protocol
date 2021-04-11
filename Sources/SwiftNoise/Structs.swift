@@ -20,7 +20,7 @@ extension Nonce {
 }
 
 // Enumerates the handshake patterns.
-public enum HandshakePattern: String {
+public enum HandshakePattern: String, CaseIterable {
   case N
   case K
   case X

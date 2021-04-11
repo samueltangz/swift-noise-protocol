@@ -13,23 +13,15 @@ final class SwiftNoiseTests: XCTestCase {
     ("testSnowVectors", testSnowVectors)
   ]
 
-  let supportedCipherSuites = [
-    "Noise_N_25519_AESGCM_SHA256",
-    "Noise_K_25519_AESGCM_SHA256",
-    "Noise_X_25519_AESGCM_SHA256",
-    "Noise_NN_25519_AESGCM_SHA256",
-    "Noise_NK_25519_AESGCM_SHA256",
-    "Noise_NX_25519_AESGCM_SHA256",
-    "Noise_KN_25519_AESGCM_SHA256",
-    "Noise_KK_25519_AESGCM_SHA256",
-    "Noise_KX_25519_AESGCM_SHA256",
-    "Noise_XN_25519_AESGCM_SHA256",
-    "Noise_XK_25519_AESGCM_SHA256",
-    "Noise_XX_25519_AESGCM_SHA256",
-    "Noise_IN_25519_AESGCM_SHA256",
-    "Noise_IK_25519_AESGCM_SHA256",
-    "Noise_IX_25519_AESGCM_SHA256",
-  ]
+  static let supportedCipherSuites = HandshakePattern.allCases.flatMap({ handshake -> [String] in
+    DHFunctions.supported.flatMap({ dhFunction -> [String] in
+      Ciphers.supported.flatMap({ cipher -> [String] in
+        Hashes.supported.map({ hash -> String in
+          return "Noise_\(handshake.rawValue)_\(dhFunction)_\(cipher)_\(hash)"
+        })
+      })
+    })
+  })
 
   func loadTestVectors() throws -> [SnowTestVector]? {
     guard let url = Bundle.module.url(forResource: "SnowTestVectors", withExtension: "json") else {
@@ -56,7 +48,7 @@ final class SwiftNoiseTests: XCTestCase {
     }
 
     for testVector in testVectors {
-      guard supportedCipherSuites.contains(testVector.protocolName) else {
+        guard SwiftNoiseTests.supportedCipherSuites.contains(testVector.protocolName) else {
         // print("unsupported cipher suite: \(testVector.protocolName)")
         continue
       }
@@ -67,6 +59,9 @@ final class SwiftNoiseTests: XCTestCase {
 
       let initiatorState = try HandshakeState(
         pattern: protoComponents.handshake,
+        dh: protoComponents.dh,
+        cipher: protoComponents.cipher,
+        hash: protoComponents.hash,
         initiator: true,
         prologue: testVector.initPrologue,
         s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
@@ -76,6 +71,9 @@ final class SwiftNoiseTests: XCTestCase {
 
       let responderState = try HandshakeState(
         pattern: protoComponents.handshake,
+        dh: protoComponents.dh,
+        cipher: protoComponents.cipher,
+        hash: protoComponents.hash,
         initiator: false,
         prologue: testVector.respPrologue,
         s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),

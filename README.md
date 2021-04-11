@@ -35,7 +35,7 @@ import SwiftNoise
 
 ### DH functions, cipher functions, and hash functions
 
-The functions are supported based on [session 12 of the specification](https://noiseprotocol.org/noise.html#dh-functions-cipher-functions-and-hash-functions).
+The functions are supported based on [section 12 of the specification](https://noiseprotocol.org/noise.html#dh-functions-cipher-functions-and-hash-functions).
 
 #### Diffie-Hellman curves
 
@@ -44,7 +44,7 @@ The functions are supported based on [session 12 of the specification](https://n
 
 #### Cipher functions
 
-* [ ] ChaChaPoly
+* [X] ChaChaPoly
 * [X] AESGCM
 
 #### Hash functions
@@ -56,7 +56,7 @@ The functions are supported based on [session 12 of the specification](https://n
 
 ### Handshake patterns
 
-The handshake patterns defined in [session 7 of the specification](https://noiseprotocol.org/noise.html#handshake-patterns) will be supported.
+The handshake patterns defined in [section 7 of the specification](https://noiseprotocol.org/noise.html#handshake-patterns) will be supported.
 
 * [X] `N`
 * [X] `K`

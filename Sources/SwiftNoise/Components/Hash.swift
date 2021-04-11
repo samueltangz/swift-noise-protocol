@@ -3,6 +3,8 @@ import Crypto
 
 // https://noiseprotocol.org/noise.html#hash-functions
 public protocol Hash {
+  static var identifier: String { get }
+
   // Hashes some arbitrary-length data with a collision-resistant cryptographic hash function and
   // returns an output of HASHLEN bytes.
   func hash(data: Data) -> Data
@@ -26,9 +28,11 @@ public protocol Hash {
 }
 
 public enum Hashes {
+  public static let supported = [SHA256.identifier]
+
   public static func hash(named name: String) -> Hash? {
     switch name {
-    case "SHA256":
+    case SHA256.identifier:
       return Hashes.SHA256()
     default:
       return nil
@@ -38,6 +42,8 @@ public enum Hashes {
 
 extension Hashes {
   struct SHA256: Hash {
+    static let identifier: String = "SHA256"
+
     func hash(data: Data) -> Data {
       return Data(Crypto.SHA256.hash(data: data))
     }

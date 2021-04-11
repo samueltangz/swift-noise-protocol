@@ -116,15 +116,23 @@ public class HandshakeState {
   }
 
   public init(
-    pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
-    e: KeyPair? = nil, rs: PublicKey? = nil
+    pattern: HandshakePattern,
+    dh: DHFunction,
+    cipher: Cipher,
+    hash: Hash,
+    initiator: Bool,
+    prologue: Data = Data(),
+    s: KeyPair? = nil,
+    e: KeyPair? = nil,
+    rs: PublicKey? = nil
   ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
-    let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
+    let protocolName = "Noise_\(pattern.rawValue)_\(type(of: dh).identifier)_\(type(of: cipher).identifier)_\(type(of: hash).identifier)"
+
     self.symmetricState = try SymmetricState(protocolName: protocolName)
 
-    self.dhFunction = DHFunctions.C25519()
+    self.dhFunction = dh
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -374,6 +382,7 @@ extension HandshakeState {
     if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
+
     var messageBuffer = message
     let messagePattern = self.messagePatterns[0]
     self.messagePatterns.removeFirst(1)
@@ -383,6 +392,7 @@ extension HandshakeState {
     for token in messagePattern {
       messageBuffer = try self.dispatchReadToken(messageBuffer, token: token)
     }
+
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().

@@ -3,6 +3,8 @@ import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
 public protocol DHFunction {
+  static var identifier: String { get }
+
   func constructKeyPair(secretKey: SecretKey) throws -> KeyPair
 
   // Generates a new Diffie-Hellman key pair. A DH key pair consists of public_key and private_key
@@ -31,9 +33,11 @@ func randomKey(_ count: Int) -> SecretKey {
 }
 
 public enum DHFunctions {
+  public static let supported = [C25519.identifier]
+
   public static func dhFunction(named name: String) -> DHFunction? {
     switch name {
-    case "25519":
+    case C25519.identifier:
       return C25519()
     default:
       return nil
@@ -44,6 +48,8 @@ public enum DHFunctions {
 extension DHFunctions {
   public struct C25519: DHFunction {
     public init() {}
+
+    public static let identifier: String = "25519"
 
     public let dhlen: Int = 32
 
