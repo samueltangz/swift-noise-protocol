@@ -57,10 +57,10 @@ final class SwiftNoiseTests: XCTestCase {
 
       print("Running test vector for \(testVector.protocolName)")
 
-      let handshakePattern = try getHandshakePatternFromProtocolName(protocolName: testVector.protocolName)
+      let protoComponents = try protocolComponents(name: testVector.protocolName)
 
       let initiatorState = try HandshakeState(
-        pattern: handshakePattern,
+        pattern: protoComponents.handshake,
         initiator: true,
         prologue: testVector.initPrologue,
         s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initStatic),
@@ -69,7 +69,7 @@ final class SwiftNoiseTests: XCTestCase {
       )
 
       let responderState = try HandshakeState(
-        pattern: handshakePattern,
+        pattern: protoComponents.handshake,
         initiator: false,
         prologue: testVector.respPrologue,
         s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respStatic),
@@ -97,37 +97,6 @@ final class SwiftNoiseTests: XCTestCase {
 
 enum TestError: Error {
   case invalidProtocolName
-}
-
-func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: Curve, cipher: Cipher, hash: Hash) {
-  let components = name.components(separatedBy: "_")
-
-  guard components.count == 5 else {
-    throw TestError.invalidProtocolName
-  }
-
-  guard let handshake = HandshakePattern(rawValue: components[1]) else {
-    throw TestError.invalidProtocolName
-  }
-
-  guard let curve = Curves.curve(named: components[2]) else {
-    throw TestError.invalidProtocolName
-  }
-
-  guard let cipher = Ciphers.cipher(named: components[3]) else {
-    throw TestError.invalidProtocolName
-  }
-
-  guard let hash = Hashes.hash(named: components[4]) else {
-    throw TestError.invalidProtocolName
-  }
-
-  return (handshake: handshake, dh: curve, cipher: cipher, hash: hash)
-}
-
-func getHandshakePatternFromProtocolName(protocolName: String) throws -> HandshakePattern {
-  let components = try protocolComponents(name: protocolName)
-  return components.handshake
 }
 
 struct SnowTestVectors: Codable {
