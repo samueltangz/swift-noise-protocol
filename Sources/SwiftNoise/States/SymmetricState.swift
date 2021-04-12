@@ -19,7 +19,7 @@ public class SymmetricState {
     // Otherwise sets h = HASH(protocol_name).
     let h = Data(protocolName.utf8)
     if h.count <= 32 {
-      self.h = h + Data(repeating: 0, count: 32-h.count)
+      self.h = h + Data(repeating: 0, count: 32 - h.count)
     } else {
       self.h = self.hashHelper.hash(data: h)
     }

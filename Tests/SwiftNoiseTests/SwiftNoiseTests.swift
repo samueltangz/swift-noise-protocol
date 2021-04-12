@@ -32,7 +32,7 @@ final class SwiftNoiseTests: XCTestCase {
     "Noise_XX_25519_AESGCM_SHA256",
     "Noise_IN_25519_AESGCM_SHA256",
     "Noise_IK_25519_AESGCM_SHA256",
-    "Noise_IX_25519_AESGCM_SHA256"
+    "Noise_IX_25519_AESGCM_SHA256",
   ]
 
   func testSnowVectors() throws {

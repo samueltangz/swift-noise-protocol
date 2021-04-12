@@ -60,122 +60,122 @@ struct PatternDetails {
 let patterns: [HandshakePattern: PatternDetails] = [
   .N: PatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [ .s ],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es ]
+      [.e, .es]
     ]
   ),
   .K: PatternDetails(
-    initiatorPremessages: [ .s ],
-    responderPremessages: [ .s ],
+    initiatorPremessages: [.s],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es, .ss ]
+      [.e, .es, .ss]
     ]
   ),
   .X: PatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [ .s ],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es, .s, .ss ]
+      [.e, .es, .s, .ss]
     ]
   ),
   .NN: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee ]
+      [.e],
+      [.e, .ee],
     ]
   ),
   .NK: PatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [ .s ],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es ],
-      [ .e, .ee ]
+      [.e, .es],
+      [.e, .ee],
     ]
   ),
   .NX: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee, .s, .es ]
+      [.e],
+      [.e, .ee, .s, .es],
     ]
   ),
   .KN: PatternDetails(
-    initiatorPremessages: [ .s ],
+    initiatorPremessages: [.s],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee, .se ]
+      [.e],
+      [.e, .ee, .se],
     ]
   ),
   .KK: PatternDetails(
-    initiatorPremessages: [ .s ],
-    responderPremessages: [ .s ],
+    initiatorPremessages: [.s],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es, .ss ],
-      [ .e, .ee, .se ]
+      [.e, .es, .ss],
+      [.e, .ee, .se],
     ]
   ),
   .KX: PatternDetails(
-    initiatorPremessages: [ .s ],
+    initiatorPremessages: [.s],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee, .se, .s, .es ]
+      [.e],
+      [.e, .ee, .se, .s, .es],
     ]
   ),
   .XN: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee ],
-      [ .s, .se ]
+      [.e],
+      [.e, .ee],
+      [.s, .se],
     ]
   ),
   .XK: PatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [ .s ],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es ],
-      [ .e, .ee ],
-      [ .s, .se ]
+      [.e, .es],
+      [.e, .ee],
+      [.s, .se],
     ]
   ),
   .XX: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e ],
-      [ .e, .ee, .s, .es ],
-      [ .s, .se ]
+      [.e],
+      [.e, .ee, .s, .es],
+      [.s, .se],
     ]
   ),
   .IN: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e, .s ],
-      [ .e, .ee, .se ]
+      [.e, .s],
+      [.e, .ee, .se],
     ]
   ),
   .IK: PatternDetails(
     initiatorPremessages: [],
-    responderPremessages: [ .s ],
+    responderPremessages: [.s],
     messagePatterns: [
-      [ .e, .es, .s, .ss ],
-      [ .e, .ee, .se ]
+      [.e, .es, .s, .ss],
+      [.e, .ee, .se],
     ]
   ),
   .IX: PatternDetails(
     initiatorPremessages: [],
     responderPremessages: [],
     messagePatterns: [
-      [ .e, .s ],
-      [ .e, .ee, .se, .s, .es ]
+      [.e, .s],
+      [.e, .ee, .se, .s, .es],
     ]
-  )
+  ),
 ]

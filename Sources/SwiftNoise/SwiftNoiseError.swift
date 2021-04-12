@@ -1,6 +1,6 @@
 enum HandshakeStateError: Error {
-  case invalidPattern // should not happen in normal use case
-  case invalidKey // should not happen in normal use case
+  case invalidPattern  // should not happen in normal use case
+  case invalidKey  // should not happen in normal use case
   case invalidPremessagePattern
   case invalidMessagePattern
   case missingStaticKey

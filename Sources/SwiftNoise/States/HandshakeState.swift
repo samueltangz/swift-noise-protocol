@@ -33,8 +33,8 @@ func getEphemeralKey(e: KeyPair?, re: PublicKey?, own: Bool) throws -> PublicKey
 }
 
 public enum Key {
-  case e // Ephemeral key
-  case s // Static key
+  case e  // Ephemeral key
+  case s  // Static key
 }
 
 // https://noiseprotocol.org/noise.html#the-handshakestate-object
@@ -57,12 +57,12 @@ public class HandshakeState {
   var curveHelper: Curve
 
   #if DEBUG
-  public var remoteS: PublicKey? {
-    return rs
-  }
-  public var remoteE: PublicKey? {
-    return re
-  }
+    public var remoteS: PublicKey? {
+      return rs
+    }
+    public var remoteE: PublicKey? {
+      return re
+    }
   #endif
 
   // Returns a public key according to the arguments:
@@ -115,8 +115,10 @@ public class HandshakeState {
     throw HandshakeStateError.invalidKey
   }
 
-  public init(pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
-              e: KeyPair? = nil, rs: PublicKey? = nil, re: PublicKey? = nil) throws {
+  public init(
+    pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
+    e: KeyPair? = nil, rs: PublicKey? = nil, re: PublicKey? = nil
+  ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
@@ -180,9 +182,9 @@ extension HandshakeState {
   // buffer. Calls MixHash(e.public_key).
   private func writeE() throws -> Data {
     #if !DEBUG
-    if self.e != nil {
-      throw HandshakeStateError.ephemeralKeyAlreadyExist
-    }
+      if self.e != nil {
+        throw HandshakeStateError.ephemeralKeyAlreadyExist
+      }
     #endif
     let e = try self.e ?? self.curveHelper.generateKeyPair()
     self.e = e

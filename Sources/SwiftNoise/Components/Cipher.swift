@@ -28,14 +28,14 @@ class AESGCM: Cipher {
   func nonceToData(n: Nonce) -> Data {
     return Data([
       0, 0, 0, 0,
-      UInt8(truncatingIfNeeded: n>>56),
-      UInt8(truncatingIfNeeded: n>>48),
-      UInt8(truncatingIfNeeded: n>>40),
-      UInt8(truncatingIfNeeded: n>>32),
-      UInt8(truncatingIfNeeded: n>>24),
-      UInt8(truncatingIfNeeded: n>>16),
-      UInt8(truncatingIfNeeded: n>>8),
-      UInt8(truncatingIfNeeded: n>>0)
+      UInt8(truncatingIfNeeded: n >> 56),
+      UInt8(truncatingIfNeeded: n >> 48),
+      UInt8(truncatingIfNeeded: n >> 40),
+      UInt8(truncatingIfNeeded: n >> 32),
+      UInt8(truncatingIfNeeded: n >> 24),
+      UInt8(truncatingIfNeeded: n >> 16),
+      UInt8(truncatingIfNeeded: n >> 8),
+      UInt8(truncatingIfNeeded: n >> 0),
     ])
   }
 
