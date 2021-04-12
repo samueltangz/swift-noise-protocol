@@ -85,11 +85,29 @@ final class SwiftNoiseTests: XCTestCase {
         let senderState = states[index & 1]
         let receiverState = states[(index & 1) ^ 1]
 
-        let ciphertext = try senderState.writeMessage(payload: message.payload)
-        XCTAssertEqual(ciphertext, message.ciphertext)
+        var ciphertext = Data()
+        var isComplete = false
 
-        let payload = try receiverState.readMessage(message: ciphertext)
-        XCTAssertEqual(payload, message.payload)
+        let writeResult = try senderState.writeMessage(payload: message.payload)
+        switch writeResult {
+        case .data(let data):
+          XCTAssertEqual(data, message.ciphertext)
+          ciphertext = data
+        case .handshakeComplete(let data, _):
+          XCTAssertEqual(data, message.ciphertext)
+          ciphertext = data
+          isComplete = true
+        }
+
+        let readResult = try receiverState.readMessage(message: ciphertext)
+        switch readResult {
+        case .data(let data):
+          XCTAssertEqual(data, message.payload)
+          XCTAssertFalse(isComplete)
+        case .handshakeComplete(let data, _):
+          XCTAssertEqual(data, message.payload)
+          XCTAssertTrue(isComplete)
+        }
       }
     }
   }

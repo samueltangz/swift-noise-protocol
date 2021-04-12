@@ -339,28 +339,39 @@ extension HandshakeState {
 
 extension HandshakeState {
 
-  public func writeMessage(payload: Data) throws -> Data {
-    if self.messagePatterns.count == 0 {
+  public enum HandshakeResult {
+    case data(Data)
+    case handshakeComplete(Data, (CipherState, CipherState))
+  }
+
+  public func writeMessage(payload: Data) throws -> HandshakeResult {
+    if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
-    var out: [Data] = []
+
+    var out = Data()
+
     let messagePattern = self.messagePatterns[0]
     self.messagePatterns.removeFirst(1)
 
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
-      out.append(try self.dispatchWriteToken(token: token))
+      out += try self.dispatchWriteToken(token: token)
     }
     // Appends EncryptAndHash(payload) to the buffer.
-    out.append(try self.symmetricState.encryptAndHash(plaintext: payload))
+    out += try self.symmetricState.encryptAndHash(plaintext: payload)
 
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    return Data(out.joined())
+    if self.messagePatterns.isEmpty {
+      return .handshakeComplete(out, try self.split())
+    } else {
+      return .data(out)
+    }
   }
 
-  public func readMessage(message: Data) throws -> Data {
-    if self.messagePatterns.count == 0 {
+  public func readMessage(message: Data) throws -> HandshakeResult {
+    if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
     var messageBuffer = message
@@ -375,7 +386,13 @@ extension HandshakeState {
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    return try self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
+    let data = try self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
+
+    if self.messagePatterns.isEmpty {
+      return .handshakeComplete(data, try self.split())
+    } else {
+      return .data(data)
+    }
   }
 
   public func getHandshakeHash() -> Data {
@@ -383,7 +400,7 @@ extension HandshakeState {
   }
 
   public func split() throws -> (CipherState, CipherState) {
-    if self.messagePatterns.count > 0 {
+    guard self.messagePatterns.isEmpty else {
       throw HandshakeStateError.incompleteHandshake
     }
     return try self.symmetricState.split()
