@@ -29,6 +29,7 @@ public class SymmetricState {
     // Calls InitializeKey(empty).
     self.cipherState = try CipherState()
   }
+
   func mixKey(inputKeyMaterial: Data) throws {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
     let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 2)
@@ -40,10 +41,12 @@ public class SymmetricState {
     // Calls InitializeKey(temp_k).
     self.cipherState = try CipherState(key: tempK)
   }
+
   func mixHash(data: Data) {
     // Sets h = HASH(h || data)
     self.h = self.hashHelper.hash(data: self.h + data)
   }
+
   func mixKeyAndHash(inputKeyMaterial: Data) throws {
     // Sets ck, temp_h, temp_k = HKDF(ck, input_key_material, 3).
     let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 3)
@@ -59,24 +62,28 @@ public class SymmetricState {
     // Calls InitializeKey(temp_k).
     self.cipherState = try CipherState(key: tempK)
   }
+
   func getHandshakeHash() -> Data {
     // Returns h.
     return self.h
   }
+
   func encryptAndHash(plaintext: Data) throws -> Data {
     // Sets ciphertext = EncryptWithAd(h, plaintext), calls MixHash(ciphertext), and returns ciphertext.
     // Note that if k is empty, the EncryptWithAd() call will set ciphertext equal to plaintext.
-    let ciphertext = try self.cipherState.encryptWithAd(ad: self.h, plaintext: plaintext)
+    let ciphertext = try self.cipherState.encrypt(plaintext: plaintext, with: self.h)
     self.mixHash(data: ciphertext)
     return ciphertext
   }
+
   func decryptAndHash(ciphertext: Data) throws -> Data {
     // Sets plaintext = DecryptWithAd(h, ciphertext), calls MixHash(ciphertext), and returns plaintext.
     // Note that if k is empty, the DecryptWithAd() call will set plaintext equal to ciphertext.
-    let plaintext = try self.cipherState.decryptWithAd(ad: self.h, ciphertext: ciphertext)
+    let plaintext = try self.cipherState.decrypt(ciphertext: ciphertext, with: self.h)
     self.mixHash(data: ciphertext)
     return plaintext
   }
+
   func split() throws -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).
     let tempKs = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: Data(), numOutputs: 2)
