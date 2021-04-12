@@ -117,7 +117,7 @@ public class HandshakeState {
 
   public init(
     pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
-    e: KeyPair? = nil, rs: PublicKey? = nil, re: PublicKey? = nil
+    e: KeyPair? = nil, rs: PublicKey? = nil
   ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
@@ -134,7 +134,7 @@ public class HandshakeState {
     self.s = s
     self.e = e
     self.rs = rs
-    self.re = re
+    self.re = nil
 
     // Calls MixHash() once for each public key listed in the pre-messages from handshake_pattern,
     // with the specified public key as input (see Section 7 for an explanation of pre-messages).
