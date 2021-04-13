@@ -42,6 +42,14 @@ final class SwiftNoiseTests: XCTestCase {
     return json.vectors
   }
 
+    func testDHCurve25519() throws {
+        let privK = Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337")
+        let pubK = Data(hex: "1ede233080a9305f658aeced07ef04ced370b5f1bba099b3abc39ec7b4f5a83f")
+
+        let kp1 = try DHFunctions.C25519().constructKeyPair(secretKey: privK)
+        XCTAssertEqual(kp1.publicKey.toHexString(), pubK.toHexString())
+    }
+
   func testSnowVectors() throws {
     guard let testVectors = try self.loadTestVectors() else {
       return XCTFail("Unable to load resource 'SnowTestVectors.json'")
