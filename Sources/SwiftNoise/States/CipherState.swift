@@ -9,7 +9,7 @@ public class CipherState {
   // n: An 8-byte (64-bit) unsigned integer nonce.
   private var n: Nonce
 
-  private let cipherHelper: Cipher
+  private let cipherFunction: Cipher
 
   init(key: Data? = nil) throws {
     if key != nil && key!.count != 32 {
@@ -20,7 +20,7 @@ public class CipherState {
     // Sets n = 0.
     self.n = 0
 
-    self.cipherHelper = Ciphers.AESGCM()
+    self.cipherFunction = Ciphers.AESGCM()
   }
 
   func hasKey() -> Bool {
@@ -38,7 +38,7 @@ public class CipherState {
     if !self.hasKey() {
       return plaintext
     }
-    let ciphertext = try self.cipherHelper.encrypt(k: self.k!, n: self.n, ad: ad, plaintext: plaintext)
+    let ciphertext = try self.cipherFunction.encrypt(k: self.k!, n: self.n, ad: ad, plaintext: plaintext)
     try self.n.increment()
     return ciphertext
   }
@@ -50,13 +50,13 @@ public class CipherState {
     if !self.hasKey() {
       return ciphertext
     }
-    let plaintext = try self.cipherHelper.decrypt(k: self.k!, n: self.n, ad: ad, ciphertext: ciphertext)
+    let plaintext = try self.cipherFunction.decrypt(k: self.k!, n: self.n, ad: ad, ciphertext: ciphertext)
     try self.n.increment()
     return plaintext
   }
 
   func rekey() throws {
     // Sets k = REKEY(k).
-    self.k = try self.cipherHelper.rekey(k: self.k!)
+    self.k = try self.cipherFunction.rekey(k: self.k!)
   }
 }

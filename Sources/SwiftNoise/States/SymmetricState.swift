@@ -9,10 +9,10 @@ public class SymmetricState {
   private var h: Data
   var cipherState: CipherState
 
-  private let hashHelper: Hash
+  private let hashFunction: Hash
 
   init(protocolName: String) throws {
-    self.hashHelper = Hashes.SHA256()
+    self.hashFunction = Hashes.SHA256()
 
     // If protocol_name is less than or equal to HASHLEN bytes in length,
     // sets h equal to protocol_name with zero bytes appended to make HASHLEN bytes.
@@ -21,7 +21,7 @@ public class SymmetricState {
     if h.count <= 32 {
       self.h = h + Data(repeating: 0, count: 32 - h.count)
     } else {
-      self.h = self.hashHelper.hash(data: h)
+      self.h = self.hashFunction.hash(data: h)
     }
     // Sets ck = h.
     self.ck = self.h
@@ -32,7 +32,7 @@ public class SymmetricState {
 
   func mixKey(inputKeyMaterial: Data) throws {
     // Sets ck, temp_k = HKDF(ck, input_key_material, 2).
-    let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 2)
+    let hkdfOutput = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 2)
     self.ck = hkdfOutput[0]
     let tempK = hkdfOutput[1]
 
@@ -44,12 +44,12 @@ public class SymmetricState {
 
   func mixHash(data: Data) {
     // Sets h = HASH(h || data)
-    self.h = self.hashHelper.hash(data: self.h + data)
+    self.h = self.hashFunction.hash(data: self.h + data)
   }
 
   func mixKeyAndHash(inputKeyMaterial: Data) throws {
     // Sets ck, temp_h, temp_k = HKDF(ck, input_key_material, 3).
-    let hkdfOutput = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 3)
+    let hkdfOutput = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: inputKeyMaterial, numOutputs: 3)
     self.ck = hkdfOutput[0]
     let tempH = hkdfOutput[1]
     let tempK = hkdfOutput[2]
@@ -86,7 +86,7 @@ public class SymmetricState {
 
   func split() throws -> (CipherState, CipherState) {
     // Sets temp_k1, temp_k2 = HKDF(ck, zerolen, 2).
-    let tempKs = try self.hashHelper.hkdf(chainingKey: self.ck, inputKeyMaterial: Data(), numOutputs: 2)
+    let tempKs = try self.hashFunction.hkdf(chainingKey: self.ck, inputKeyMaterial: Data(), numOutputs: 2)
     let tempK1 = tempKs[0]
     let tempK2 = tempKs[1]
 

@@ -1,11 +1,11 @@
 import XCTest
 import SwiftNoise
 
-func getKeyPair(curveHelper: Curve, secretKey: Data?) -> KeyPair? {
+func getKeyPair(dhFunction: Curve, secretKey: Data?) -> KeyPair? {
   guard let secret = secretKey else {
     return nil
   }
-  return try? curveHelper.constructKeyPair(secretKey: secret)
+  return try? dhFunction.constructKeyPair(secretKey: secret)
 }
 
 final class SwiftNoiseTests: XCTestCase {
@@ -63,8 +63,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: protoComponents.handshake,
         initiator: true,
         prologue: testVector.initPrologue,
-        s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initStatic),
-        e: getKeyPair(curveHelper: curveHelper, secretKey: testVector.initEphemeral),
+        s: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
+        e: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initEphemeral),
         rs: testVector.initRemoteStatic
       )
 
@@ -72,8 +72,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: protoComponents.handshake,
         initiator: false,
         prologue: testVector.respPrologue,
-        s: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respStatic),
-        e: getKeyPair(curveHelper: curveHelper, secretKey: testVector.respEphemeral),
+        s: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),
+        e: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respEphemeral),
         rs: testVector.respRemoteStatic
       )
 

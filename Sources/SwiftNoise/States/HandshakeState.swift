@@ -54,7 +54,7 @@ public class HandshakeState {
   var messagePatterns: [[Token]]
   var symmetricState: SymmetricState
 
-  var curveHelper: Curve
+  let dhFunction: Curve
 
   #if DEBUG
     public var remoteS: PublicKey? {
@@ -124,7 +124,7 @@ public class HandshakeState {
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
     self.symmetricState = try SymmetricState(protocolName: protocolName)
 
-    self.curveHelper = Curves.C25519()
+    self.dhFunction = Curves.C25519()
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -187,7 +187,7 @@ extension HandshakeState {
         throw HandshakeStateError.ephemeralKeyAlreadyExist
       }
     #endif
-    let e = try self.e ?? self.curveHelper.generateKeyPair()
+    let e = try self.e ?? self.dhFunction.generateKeyPair()
     self.e = e
     self.symmetricState.mixHash(data: e.publicKey)
     return e.publicKey
@@ -203,7 +203,7 @@ extension HandshakeState {
   private func writeEE() throws -> Data {
     let e = try self.getKeyPair(key: .e)
     let re = try self.getPublicKey(own: false, key: .e)
-    let dh = try self.curveHelper.dh(keyPair: e, publicKey: re)
+    let dh = try self.dhFunction.dh(keyPair: e, publicKey: re)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
@@ -212,7 +212,7 @@ extension HandshakeState {
   private func writeES() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .s : .e)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
@@ -221,7 +221,7 @@ extension HandshakeState {
   private func writeSE() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .e : .s)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
@@ -230,7 +230,7 @@ extension HandshakeState {
   private func writeSS() throws -> Data {
     let s = try self.getKeyPair(key: .s)
     let rs = try self.getPublicKey(own: false, key: .s)
-    let dh = try self.curveHelper.dh(keyPair: s, publicKey: rs)
+    let dh = try self.dhFunction.dh(keyPair: s, publicKey: rs)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
@@ -285,7 +285,7 @@ extension HandshakeState {
   private func readEE(_ messageBuffer: Data) throws -> Data {
     let e = try self.getKeyPair(key: .e)
     let re = try self.getPublicKey(own: false, key: .e)
-    let dh = try self.curveHelper.dh(keyPair: e, publicKey: re)
+    let dh = try self.dhFunction.dh(keyPair: e, publicKey: re)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
@@ -294,7 +294,7 @@ extension HandshakeState {
   private func readES(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .s : .e)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
@@ -303,7 +303,7 @@ extension HandshakeState {
   private func readSE(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .e : .s)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
@@ -312,7 +312,7 @@ extension HandshakeState {
   private func readSS(_ messageBuffer: Data) throws -> Data {
     let s = try self.getKeyPair(key: .s)
     let rs = try self.getPublicKey(own: false, key: .s)
-    let dh = try self.curveHelper.dh(keyPair: s, publicKey: rs)
+    let dh = try self.dhFunction.dh(keyPair: s, publicKey: rs)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
