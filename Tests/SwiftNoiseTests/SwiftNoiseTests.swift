@@ -1,11 +1,11 @@
 import XCTest
 import SwiftNoise
 
-func getKeyPair(dhFunction: Curve, secretKey: Data?) -> KeyPair? {
+func getKeyPair(dhFunction: Curve, secretKey: Data?) throws -> KeyPair? {
   guard let secret = secretKey else {
     return nil
   }
-  return try? dhFunction.constructKeyPair(secretKey: secret)
+  return try dhFunction.constructKeyPair(secretKey: secret)
 }
 
 final class SwiftNoiseTests: XCTestCase {
@@ -47,10 +47,8 @@ final class SwiftNoiseTests: XCTestCase {
       return XCTFail("Unable to load resource 'SnowTestVectors.json'")
     }
 
-    let curveHelper = Curves.C25519()
-
     for testVector in testVectors {
-      if !supportedCipherSuites.contains(testVector.protocolName) {
+      guard supportedCipherSuites.contains(testVector.protocolName) else {
         // print("unsupported cipher suite: \(testVector.protocolName)")
         continue
       }
@@ -63,8 +61,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: protoComponents.handshake,
         initiator: true,
         prologue: testVector.initPrologue,
-        s: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
-        e: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initEphemeral),
+        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
+        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initEphemeral),
         rs: testVector.initRemoteStatic
       )
 
@@ -72,8 +70,8 @@ final class SwiftNoiseTests: XCTestCase {
         pattern: protoComponents.handshake,
         initiator: false,
         prologue: testVector.respPrologue,
-        s: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),
-        e: getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respEphemeral),
+        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),
+        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respEphemeral),
         rs: testVector.respRemoteStatic
       )
 
