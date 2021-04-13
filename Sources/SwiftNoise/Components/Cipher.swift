@@ -49,19 +49,15 @@ extension Ciphers {
     func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
       let nonce = try AES.GCM.Nonce(data: nonceToData(n: n))
-      let box = try AES.GCM.seal(plaintext, using: key, nonce: nonce, authenticating: ad)
 
+      let box = try AES.GCM.seal(plaintext, using: key, nonce: nonce, authenticating: ad)
       return box.ciphertext + box.tag
     }
 
     func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
       let nonce = try AES.GCM.Nonce(data: nonceToData(n: n))
-
-      let ctext = ciphertext.prefix(ciphertext.count - 16)
-      let tag = ciphertext.suffix(16)
-
-      let box = try AES.GCM.SealedBox(nonce: nonce, ciphertext: ctext, tag: tag)
+      let box = try AES.GCM.SealedBox(combined: nonce + ciphertext)
 
       return try AES.GCM.open(box, using: key, authenticating: ad)
     }
