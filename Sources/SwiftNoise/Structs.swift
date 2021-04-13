@@ -180,7 +180,7 @@ let patterns: [HandshakePattern: PatternDetails] = [
   ),
 ]
 
-public func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: Curve, cipher: Cipher, hash: Hash) {
+public func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: DHFunction, cipher: Cipher, hash: Hash) {
   let components = name.components(separatedBy: "_")
 
   guard components.count == 5 else {
@@ -191,7 +191,7 @@ public func protocolComponents(name: String) throws -> (handshake: HandshakePatt
     throw ProtocolError.unsupported
   }
 
-  guard let curve = Curves.curve(named: components[2]) else {
+  guard let dhFunction = DHFunctions.dhFunction(named: components[2]) else {
     throw ProtocolError.unsupported
   }
 
@@ -203,5 +203,5 @@ public func protocolComponents(name: String) throws -> (handshake: HandshakePatt
     throw ProtocolError.unsupported
   }
 
-  return (handshake: handshake, dh: curve, cipher: cipher, hash: hash)
+  return (handshake: handshake, dh: dhFunction, cipher: cipher, hash: hash)
 }

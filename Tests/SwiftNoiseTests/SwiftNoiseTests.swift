@@ -1,7 +1,7 @@
 import XCTest
 import SwiftNoise
 
-func getKeyPair(dhFunction: Curve, secretKey: Data?) throws -> KeyPair? {
+func getKeyPair(dhFunction: DHFunction, secretKey: Data?) throws -> KeyPair? {
   guard let secret = secretKey else {
     return nil
   }

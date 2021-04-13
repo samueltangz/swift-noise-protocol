@@ -54,7 +54,7 @@ public class HandshakeState {
   var messagePatterns: [[Token]]
   var symmetricState: SymmetricState
 
-  let dhFunction: Curve
+  let dhFunction: DHFunction
 
   #if DEBUG
     public var remoteS: PublicKey? {
@@ -124,7 +124,7 @@ public class HandshakeState {
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
     self.symmetricState = try SymmetricState(protocolName: protocolName)
 
-    self.dhFunction = Curves.C25519()
+    self.dhFunction = DHFunctions.C25519()
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)

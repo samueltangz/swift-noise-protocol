@@ -2,7 +2,7 @@ import Foundation
 import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
-public protocol Curve {
+public protocol DHFunction {
   func constructKeyPair(secretKey: SecretKey) throws -> KeyPair
 
   // Generates a new Diffie-Hellman key pair. A DH key pair consists of public_key and private_key
@@ -30,8 +30,8 @@ func randomKey(_ count: Int) -> SecretKey {
   return Data(bytes)
 }
 
-public enum Curves {
-  public static func curve(named name: String) -> Curve? {
+public enum DHFunctions {
+  public static func dhFunction(named name: String) -> DHFunction? {
     switch name {
     case "25519":
       return C25519()
@@ -41,8 +41,8 @@ public enum Curves {
   }
 }
 
-extension Curves {
-  public struct C25519: Curve {
+extension DHFunctions {
+  public struct C25519: DHFunction {
     public init() {}
 
     public let dhlen: Int = 32
