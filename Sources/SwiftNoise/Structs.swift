@@ -4,8 +4,8 @@ public typealias PublicKey = Data
 public typealias SecretKey = Data
 
 public struct KeyPair {
-  public var publicKey: PublicKey
-  public var secretKey: SecretKey
+  public let publicKey: PublicKey
+  public let secretKey: SecretKey
 }
 
 public typealias Nonce = UInt64
@@ -179,3 +179,29 @@ let patterns: [HandshakePattern: PatternDetails] = [
     ]
   ),
 ]
+
+public func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: DHFunction, cipher: Cipher, hash: Hash) {
+  let components = name.components(separatedBy: "_")
+
+  guard components.count == 5 else {
+    throw ProtocolError.invalid
+  }
+
+  guard let handshake = HandshakePattern(rawValue: components[1]) else {
+    throw ProtocolError.unsupported
+  }
+
+  guard let dhFunction = DHFunctions.dhFunction(named: components[2]) else {
+    throw ProtocolError.unsupported
+  }
+
+  guard let cipher = Ciphers.cipher(named: components[3]) else {
+    throw ProtocolError.unsupported
+  }
+
+  guard let hash = Hashes.hash(named: components[4]) else {
+    throw ProtocolError.unsupported
+  }
+
+  return (handshake: handshake, dh: dhFunction, cipher: cipher, hash: hash)
+}

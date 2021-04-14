@@ -34,3 +34,8 @@ enum HashError: Error {
   case tooLittleOutputs
   case tooManyOutputs
 }
+
+enum ProtocolError: Error {
+  case invalid
+  case unsupported
+}

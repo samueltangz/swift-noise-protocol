@@ -1,9 +1,8 @@
 import Foundation
-import CryptoSwift
-import CryptoKit25519
+import Crypto
 
 // https://noiseprotocol.org/noise.html#dh-functions
-public protocol Curve {
+public protocol DHFunction {
   func constructKeyPair(secretKey: SecretKey) throws -> KeyPair
 
   // Generates a new Diffie-Hellman key pair. A DH key pair consists of public_key and private_key
@@ -26,35 +25,49 @@ public protocol Curve {
   var dhlen: Int { get }
 }
 
-public class C25519: Curve {
-  public init() {}
+func randomKey(_ count: Int) -> SecretKey {
+  let bytes = (0..<count).map({ _ in UInt8.random(in: 0...UInt8.max) })
+  return Data(bytes)
+}
 
-  func normalize(secretKey: SecretKey) -> SecretKey {
-    var newSecretKey = secretKey
-    newSecretKey[0] &= 0xf8
-    newSecretKey[31] &= 0x3f
-    newSecretKey[31] |= 0x40
-    return newSecretKey
+public enum DHFunctions {
+  public static func dhFunction(named name: String) -> DHFunction? {
+    switch name {
+    case "25519":
+      return C25519()
+    default:
+      return nil
+    }
+  }
+}
+
+extension DHFunctions {
+  public struct C25519: DHFunction {
+    public init() {}
+
+    public let dhlen: Int = 32
+
+    public func constructKeyPair(secretKey: SecretKey) throws -> KeyPair {
+      let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: secretKey)
+      let publicKey = secretKeyObj.publicKey.rawRepresentation
+
+      return KeyPair(publicKey: publicKey, secretKey: secretKey)
+    }
+
+    public func generateKeyPair() throws -> KeyPair {
+      let secretKey = randomKey(self.dhlen)
+      return try constructKeyPair(secretKey: secretKey)
+    }
+
+    public func dh(keyPair: KeyPair, publicKey: PublicKey) throws -> Data {
+      let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: keyPair.secretKey)
+      let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: publicKey)
+      let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
+
+      return sharedKey.withUnsafeBytes { ptr in
+        return Data(ptr)
+      }
+    }
   }
 
-  public func constructKeyPair(secretKey: SecretKey) throws -> KeyPair {
-    let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: Data(normalize(secretKey: secretKey)))
-    let publicKey = secretKeyObj.publicKey.rawRepresentation
-    return KeyPair(publicKey: publicKey, secretKey: secretKey)
-  }
-
-  public func generateKeyPair() throws -> KeyPair {
-    let secretKey = Data(AES.randomIV(32))
-    return try constructKeyPair(secretKey: secretKey)
-  }
-
-  public func dh(keyPair: KeyPair, publicKey: PublicKey) throws -> Data {
-    let secretKeyObj = try Curve25519.KeyAgreement.PrivateKey(
-      rawRepresentation: Data(normalize(secretKey: keyPair.secretKey)))
-    let publicKeyObj = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: Data(publicKey))
-    let sharedKey = try secretKeyObj.sharedSecretFromKeyAgreement(with: publicKeyObj)
-    return sharedKey.rawData
-  }
-
-  public var dhlen: Int = 32
 }

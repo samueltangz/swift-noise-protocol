@@ -54,7 +54,7 @@ public class HandshakeState {
   var messagePatterns: [[Token]]
   var symmetricState: SymmetricState
 
-  var curveHelper: Curve
+  let dhFunction: DHFunction
 
   #if DEBUG
     public var remoteS: PublicKey? {
@@ -117,14 +117,14 @@ public class HandshakeState {
 
   public init(
     pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
-    e: KeyPair? = nil, rs: PublicKey? = nil, re: PublicKey? = nil
+    e: KeyPair? = nil, rs: PublicKey? = nil
   ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
     let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
     self.symmetricState = try SymmetricState(protocolName: protocolName)
 
-    self.curveHelper = C25519()
+    self.dhFunction = DHFunctions.C25519()
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -134,7 +134,7 @@ public class HandshakeState {
     self.s = s
     self.e = e
     self.rs = rs
-    self.re = re
+    self.re = nil
 
     // Calls MixHash() once for each public key listed in the pre-messages from handshake_pattern,
     // with the specified public key as input (see Section 7 for an explanation of pre-messages).
@@ -178,6 +178,7 @@ public class HandshakeState {
 
 // Maintains the helper functions for the handshake state. Those function should be kept private.
 extension HandshakeState {
+
   // For "e": Sets e (which must be empty) to GENERATE_KEYPAIR(). Appends e.public_key to the
   // buffer. Calls MixHash(e.public_key).
   private func writeE() throws -> Data {
@@ -186,48 +187,54 @@ extension HandshakeState {
         throw HandshakeStateError.ephemeralKeyAlreadyExist
       }
     #endif
-    let e = try self.e ?? self.curveHelper.generateKeyPair()
+    let e = try self.e ?? self.dhFunction.generateKeyPair()
     self.e = e
     self.symmetricState.mixHash(data: e.publicKey)
     return e.publicKey
   }
+
   // For "s": Appends EncryptAndHash(s.public_key) to the buffer.
   private func writeS() throws -> Data {
     let s = try self.getPublicKey(own: true, key: .s)
     return try self.symmetricState.encryptAndHash(plaintext: s)
   }
+
   // For "ee": Calls MixKey(DH(e, re)).
   private func writeEE() throws -> Data {
     let e = try self.getKeyPair(key: .e)
     let re = try self.getPublicKey(own: false, key: .e)
-    let dh = try self.curveHelper.dh(keyPair: e, publicKey: re)
+    let dh = try self.dhFunction.dh(keyPair: e, publicKey: re)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
   private func writeES() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .s : .e)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
   private func writeSE() throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .e : .s)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   // For "ss": Calls MixKey(DH(s, rs)).
   private func writeSS() throws -> Data {
     let s = try self.getKeyPair(key: .s)
     let rs = try self.getPublicKey(own: false, key: .s)
-    let dh = try self.curveHelper.dh(keyPair: s, publicKey: rs)
+    let dh = try self.dhFunction.dh(keyPair: s, publicKey: rs)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return Data()
   }
+
   private func dispatchWriteToken(token: Token) throws -> Data {
     switch token {
     case .e:
@@ -258,6 +265,7 @@ extension HandshakeState {
     self.symmetricState.mixHash(data: re)
     return messageBuffer.suffix(messageBuffer.count - 32)
   }
+
   // For "s": Sets temp to the next DHLEN + 16 bytes of the message if HasKey() == True, or to
   // the next DHLEN bytes otherwise. Sets rs (which must be empty) to DecryptAndHash(temp).
   private func readS(_ messageBuffer: Data) throws -> Data {
@@ -272,38 +280,43 @@ extension HandshakeState {
     self.rs = rs
     return messageBuffer.suffix(messageBuffer.count - size)
   }
+
   // For "ee": Calls MixKey(DH(e, re)).
   private func readEE(_ messageBuffer: Data) throws -> Data {
     let e = try self.getKeyPair(key: .e)
     let re = try self.getPublicKey(own: false, key: .e)
-    let dh = try self.curveHelper.dh(keyPair: e, publicKey: re)
+    let dh = try self.dhFunction.dh(keyPair: e, publicKey: re)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "es": Calls MixKey(DH(e, rs)) if initiator, MixKey(DH(s, re)) if responder.
   private func readES(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .e : .s)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .s : .e)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "se": Calls MixKey(DH(s, re)) if initiator, MixKey(DH(e, rs)) if responder.
   private func readSE(_ messageBuffer: Data) throws -> Data {
     let keyPair = try self.getKeyPair(key: self.initiator ? .s : .e)
     let remotePublicKey = try self.getPublicKey(own: false, key: self.initiator ? .e : .s)
-    let dh = try self.curveHelper.dh(keyPair: keyPair, publicKey: remotePublicKey)
+    let dh = try self.dhFunction.dh(keyPair: keyPair, publicKey: remotePublicKey)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   // For "ss": Calls MixKey(DH(s, rs)).
   private func readSS(_ messageBuffer: Data) throws -> Data {
     let s = try self.getKeyPair(key: .s)
     let rs = try self.getPublicKey(own: false, key: .s)
-    let dh = try self.curveHelper.dh(keyPair: s, publicKey: rs)
+    let dh = try self.dhFunction.dh(keyPair: s, publicKey: rs)
     try self.symmetricState.mixKey(inputKeyMaterial: dh)
     return messageBuffer
   }
+
   private func dispatchReadToken(_ messageBuffer: Data, token: Token) throws -> Data {
     switch token {
     case .e:
@@ -325,28 +338,40 @@ extension HandshakeState {
 }
 
 extension HandshakeState {
-  public func writeMessage(payload: Data) throws -> Data {
-    if self.messagePatterns.count == 0 {
+
+  public enum HandshakeResult {
+    case data(Data)
+    case handshakeComplete(Data, (CipherState, CipherState))
+  }
+
+  public func writeMessage(payload: Data) throws -> HandshakeResult {
+    if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
-    var out: [Data] = []
+
+    var out = Data()
+
     let messagePattern = self.messagePatterns[0]
     self.messagePatterns.removeFirst(1)
 
     // Fetches and deletes the next message pattern from message_patterns, then sequentially
     // processes each token from the message pattern:
     for token in messagePattern {
-      out.append(try self.dispatchWriteToken(token: token))
+      out += try self.dispatchWriteToken(token: token)
     }
     // Appends EncryptAndHash(payload) to the buffer.
-    out.append(try self.symmetricState.encryptAndHash(plaintext: payload))
+    out += try self.symmetricState.encryptAndHash(plaintext: payload)
 
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    return Data(out.joined())
+    if self.messagePatterns.isEmpty {
+      return .handshakeComplete(out, try self.split())
+    } else {
+      return .data(out)
+    }
   }
 
-  public func readMessage(message: Data) throws -> Data {
-    if self.messagePatterns.count == 0 {
+  public func readMessage(message: Data) throws -> HandshakeResult {
+    if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
     var messageBuffer = message
@@ -361,7 +386,13 @@ extension HandshakeState {
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().
-    return try self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
+    let data = try self.symmetricState.decryptAndHash(ciphertext: messageBuffer)
+
+    if self.messagePatterns.isEmpty {
+      return .handshakeComplete(data, try self.split())
+    } else {
+      return .data(data)
+    }
   }
 
   public func getHandshakeHash() -> Data {
@@ -369,7 +400,7 @@ extension HandshakeState {
   }
 
   public func split() throws -> (CipherState, CipherState) {
-    if self.messagePatterns.count > 0 {
+    guard self.messagePatterns.isEmpty else {
       throw HandshakeStateError.incompleteHandshake
     }
     return try self.symmetricState.split()

@@ -2,39 +2,12 @@
   "object": {
     "pins": [
       {
-        "package": "CCurve25519",
-        "repositoryURL": "https://github.com/christophhagen/CCurve25519",
+        "package": "swift-crypto",
+        "repositoryURL": "https://github.com/apple/swift-crypto.git",
         "state": {
           "branch": null,
-          "revision": "f27fa9a2cf0c61a3cb9d9a03b3d3d801ccc64b32",
-          "version": "1.0.4"
-        }
-      },
-      {
-        "package": "CEd25519",
-        "repositoryURL": "https://github.com/christophhagen/CEd25519",
-        "state": {
-          "branch": null,
-          "revision": "9c24d886a9bbc940da973953abb7b2cca02e5d9d",
-          "version": "0.0.6"
-        }
-      },
-      {
-        "package": "CryptoKit25519",
-        "repositoryURL": "https://github.com/christophhagen/CryptoKit25519",
-        "state": {
-          "branch": null,
-          "revision": "d1feb6533039fedc36a4004bd32b328f18a7e653",
-          "version": "0.4.2"
-        }
-      },
-      {
-        "package": "CryptoSwift",
-        "repositoryURL": "https://github.com/krzyzanowskim/CryptoSwift.git",
-        "state": {
-          "branch": null,
-          "revision": "a44caef0550c346e0ab9172f7c9a3852c1833599",
-          "version": "1.3.0"
+          "revision": "3bea268b223651c4ab7b7b9ad62ef9b2d4143eb6",
+          "version": "1.1.6"
         }
       }
     ]
