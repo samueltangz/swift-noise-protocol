@@ -116,10 +116,7 @@ public class HandshakeState {
   }
 
   public init(
-    pattern: HandshakePattern,
-    dh: DHFunction,
-    cipher: Cipher,
-    hash: Hash,
+    protocol proto: NoiseProtocol,
     initiator: Bool,
     prologue: Data = Data(),
     s: KeyPair? = nil,
@@ -128,11 +125,9 @@ public class HandshakeState {
   ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
-    let protocolName = "Noise_\(pattern.rawValue)_\(type(of: dh).identifier)_\(type(of: cipher).identifier)_\(type(of: hash).identifier)"
+    self.symmetricState = try SymmetricState(protocolName: proto.name)
 
-    self.symmetricState = try SymmetricState(protocolName: protocolName)
-
-    self.dhFunction = dh
+    self.dhFunction = proto.cipherSuite.dh
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -149,7 +144,7 @@ public class HandshakeState {
     // If both initiator and responder have pre-messages, the initiator's public keys are hashed
     // first. If multiple public keys are listed in either party's pre-message, the public keys are
     // hashed in the order that they are listed.
-    guard let patternDetails = patterns[pattern] else {
+    guard let patternDetails = patterns[proto.handshake] else {
       throw HandshakeStateError.invalidPattern
     }
 

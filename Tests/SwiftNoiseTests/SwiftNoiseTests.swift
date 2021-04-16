@@ -34,13 +34,13 @@ final class SwiftNoiseTests: XCTestCase {
     return json.vectors
   }
 
-    func testDHCurve25519() throws {
-        let privK = Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337")
-        let pubK = Data(hex: "1ede233080a9305f658aeced07ef04ced370b5f1bba099b3abc39ec7b4f5a83f")
+  func testDHCurve25519() throws {
+    let privK = Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337")
+    let pubK = Data(hex: "1ede233080a9305f658aeced07ef04ced370b5f1bba099b3abc39ec7b4f5a83f")
 
-        let kp1 = try DHFunctions.C25519().constructKeyPair(secretKey: privK)
-        XCTAssertEqual(kp1.publicKey.toHexString(), pubK.toHexString())
-    }
+    let kp1 = try DHFunctions.C25519().constructKeyPair(secretKey: privK)
+    XCTAssertEqual(kp1.publicKey.toHexString(), pubK.toHexString())
+  }
 
   func testSnowVectors() throws {
     guard let testVectors = try self.loadTestVectors() else {
@@ -48,36 +48,30 @@ final class SwiftNoiseTests: XCTestCase {
     }
 
     for testVector in testVectors {
-        guard SwiftNoiseTests.supportedCipherSuites.contains(testVector.protocolName) else {
+      guard SwiftNoiseTests.supportedCipherSuites.contains(testVector.protocolName) else {
         // print("unsupported cipher suite: \(testVector.protocolName)")
         continue
       }
 
       print("Running test vector for \(testVector.protocolName)")
 
-      let protoComponents = try protocolComponents(name: testVector.protocolName)
+      let proto = try NoiseProtocol(name: testVector.protocolName)
 
       let initiatorState = try HandshakeState(
-        pattern: protoComponents.handshake,
-        dh: protoComponents.dh,
-        cipher: protoComponents.cipher,
-        hash: protoComponents.hash,
+        protocol: proto,
         initiator: true,
         prologue: testVector.initPrologue,
-        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
-        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initEphemeral),
+        s: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.initStatic),
+        e: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.initEphemeral),
         rs: testVector.initRemoteStatic
       )
 
       let responderState = try HandshakeState(
-        pattern: protoComponents.handshake,
-        dh: protoComponents.dh,
-        cipher: protoComponents.cipher,
-        hash: protoComponents.hash,
+        protocol: proto,
         initiator: false,
         prologue: testVector.respPrologue,
-        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),
-        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respEphemeral),
+        s: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.respStatic),
+        e: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.respEphemeral),
         rs: testVector.respRemoteStatic
       )
 

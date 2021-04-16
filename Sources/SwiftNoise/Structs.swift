@@ -180,6 +180,43 @@ let patterns: [HandshakePattern: PatternDetails] = [
   ),
 ]
 
+public struct NoiseCipherSuite {
+
+  public let dh: DHFunction
+  public let cipher: Cipher
+  public let hash: Hash
+
+  public init(dh: DHFunction, cipher: Cipher, hash: Hash) {
+    self.dh = dh
+    self.cipher = cipher
+    self.hash = hash
+  }
+
+}
+
+public struct NoiseProtocol {
+
+  public let handshake: HandshakePattern
+  public let cipherSuite: NoiseCipherSuite
+
+  public var name: String {
+    let handshake = self.handshake.rawValue
+    let dhFunction = type(of: self.cipherSuite.dh).identifier
+    let cipherFunction = type(of: self.cipherSuite.cipher).identifier
+    let hashFunction = type(of: self.cipherSuite.hash).identifier
+
+    return "Noise_\(handshake)_\(dhFunction)_\(cipherFunction)_\(hashFunction)"
+  }
+
+  public init(name: String) throws {
+    let components = try protocolComponents(name: name)
+
+    self.handshake = components.handshake
+    self.cipherSuite = NoiseCipherSuite(dh: components.dh, cipher: components.cipher, hash: components.hash)
+  }
+
+}
+
 public func protocolComponents(name: String) throws -> (handshake: HandshakePattern, dh: DHFunction, cipher: Cipher, hash: Hash) {
   let components = name.components(separatedBy: "_")
 
