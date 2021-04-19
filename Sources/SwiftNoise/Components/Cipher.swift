@@ -67,9 +67,6 @@ extension Ciphers {
   struct AESGCM: Cipher {
     static let identifier: String = "AESGCM"
 
-    // https://github.com/apple/swift-crypto/blob/3bea268b223651c4ab7b7b9ad62ef9b2d4143eb6/Sources/Crypto/AEADs/AES/GCM/AES-GCM.swift#L29
-    static let tagByteCount = 16
-
     func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
       let nonce = try AES.GCM.Nonce(data: nonceToDataBig(n: n))
@@ -92,9 +89,6 @@ extension Ciphers {
 extension Ciphers {
   struct ChaChaPoly: Cipher {
     static let identifier: String = "ChaChaPoly"
-
-    // https://github.com/apple/swift-crypto/blob/3bea268b223651c4ab7b7b9ad62ef9b2d4143eb6/Sources/Crypto/AEADs/ChachaPoly/ChaChaPoly.swift#L28
-    static let tagByteCount = 16
 
     func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
