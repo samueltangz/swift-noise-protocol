@@ -13,23 +13,15 @@ final class SwiftNoiseTests: XCTestCase {
     ("testSnowVectors", testSnowVectors)
   ]
 
-  let supportedCipherSuites = [
-    "Noise_N_25519_AESGCM_SHA256",
-    "Noise_K_25519_AESGCM_SHA256",
-    "Noise_X_25519_AESGCM_SHA256",
-    "Noise_NN_25519_AESGCM_SHA256",
-    "Noise_NK_25519_AESGCM_SHA256",
-    "Noise_NX_25519_AESGCM_SHA256",
-    "Noise_KN_25519_AESGCM_SHA256",
-    "Noise_KK_25519_AESGCM_SHA256",
-    "Noise_KX_25519_AESGCM_SHA256",
-    "Noise_XN_25519_AESGCM_SHA256",
-    "Noise_XK_25519_AESGCM_SHA256",
-    "Noise_XX_25519_AESGCM_SHA256",
-    "Noise_IN_25519_AESGCM_SHA256",
-    "Noise_IK_25519_AESGCM_SHA256",
-    "Noise_IX_25519_AESGCM_SHA256",
-  ]
+  static let supportedCipherSuites = HandshakePattern.allCases.flatMap({ handshake -> [String] in
+    DHFunctions.supported.flatMap({ dhFunction -> [String] in
+      Ciphers.supported.flatMap({ cipher -> [String] in
+        Hashes.supported.map({ hash -> String in
+          return "Noise_\(handshake.rawValue)_\(dhFunction)_\(cipher)_\(hash)"
+        })
+      })
+    })
+  })
 
   func loadTestVectors() throws -> [SnowTestVector]? {
     guard let url = Bundle.module.url(forResource: "SnowTestVectors", withExtension: "json") else {
@@ -42,13 +34,13 @@ final class SwiftNoiseTests: XCTestCase {
     return json.vectors
   }
 
-    func testDHCurve25519() throws {
-        let privK = Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337")
-        let pubK = Data(hex: "1ede233080a9305f658aeced07ef04ced370b5f1bba099b3abc39ec7b4f5a83f")
+  func testDHCurve25519() throws {
+    let privK = Data(hex: "4b9d66860c39de31492bdb3b090527bf66ef1ea75f105bb6f87328dfbb9fe337")
+    let pubK = Data(hex: "1ede233080a9305f658aeced07ef04ced370b5f1bba099b3abc39ec7b4f5a83f")
 
-        let kp1 = try DHFunctions.C25519().constructKeyPair(secretKey: privK)
-        XCTAssertEqual(kp1.publicKey.toHexString(), pubK.toHexString())
-    }
+    let kp1 = try DHFunctions.C25519().constructKeyPair(secretKey: privK)
+    XCTAssertEqual(kp1.publicKey.toHexString(), pubK.toHexString())
+  }
 
   func testSnowVectors() throws {
     guard let testVectors = try self.loadTestVectors() else {
@@ -56,30 +48,30 @@ final class SwiftNoiseTests: XCTestCase {
     }
 
     for testVector in testVectors {
-      guard supportedCipherSuites.contains(testVector.protocolName) else {
+      guard SwiftNoiseTests.supportedCipherSuites.contains(testVector.protocolName) else {
         // print("unsupported cipher suite: \(testVector.protocolName)")
         continue
       }
 
       print("Running test vector for \(testVector.protocolName)")
 
-      let protoComponents = try protocolComponents(name: testVector.protocolName)
+      let proto = try NoiseProtocol(name: testVector.protocolName)
 
       let initiatorState = try HandshakeState(
-        pattern: protoComponents.handshake,
+        protocol: proto,
         initiator: true,
         prologue: testVector.initPrologue,
-        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initStatic),
-        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.initEphemeral),
+        s: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.initStatic),
+        e: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.initEphemeral),
         rs: testVector.initRemoteStatic
       )
 
       let responderState = try HandshakeState(
-        pattern: protoComponents.handshake,
+        protocol: proto,
         initiator: false,
         prologue: testVector.respPrologue,
-        s: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respStatic),
-        e: try getKeyPair(dhFunction: protoComponents.dh, secretKey: testVector.respEphemeral),
+        s: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.respStatic),
+        e: try getKeyPair(dhFunction: proto.cipherSuite.dh, secretKey: testVector.respEphemeral),
         rs: testVector.respRemoteStatic
       )
 

@@ -116,15 +116,18 @@ public class HandshakeState {
   }
 
   public init(
-    pattern: HandshakePattern, initiator: Bool, prologue: Data = Data(), s: KeyPair? = nil,
-    e: KeyPair? = nil, rs: PublicKey? = nil
+    protocol proto: NoiseProtocol,
+    initiator: Bool,
+    prologue: Data = Data(),
+    s: KeyPair? = nil,
+    e: KeyPair? = nil,
+    rs: PublicKey? = nil
   ) throws {
     // Derives a protocol_name byte sequence by combining the names for the handshake pattern and
     // crypto functions, as specified in Section 8. Calls InitializeSymmetric(protocol_name).
-    let protocolName = "Noise_\(pattern)_25519_AESGCM_SHA256"
-    self.symmetricState = try SymmetricState(protocolName: protocolName)
+    self.symmetricState = try SymmetricState(protocolName: proto.name)
 
-    self.dhFunction = DHFunctions.C25519()
+    self.dhFunction = proto.cipherSuite.dh
 
     // Calls MixHash(prologue).
     self.symmetricState.mixHash(data: prologue)
@@ -141,7 +144,7 @@ public class HandshakeState {
     // If both initiator and responder have pre-messages, the initiator's public keys are hashed
     // first. If multiple public keys are listed in either party's pre-message, the public keys are
     // hashed in the order that they are listed.
-    guard let patternDetails = patterns[pattern] else {
+    guard let patternDetails = patterns[proto.handshake] else {
       throw HandshakeStateError.invalidPattern
     }
 
@@ -374,6 +377,7 @@ extension HandshakeState {
     if self.messagePatterns.isEmpty {
       throw HandshakeStateError.completedHandshake
     }
+
     var messageBuffer = message
     let messagePattern = self.messagePatterns[0]
     self.messagePatterns.removeFirst(1)
@@ -383,6 +387,7 @@ extension HandshakeState {
     for token in messagePattern {
       messageBuffer = try self.dispatchReadToken(messageBuffer, token: token)
     }
+
     // Calls DecryptAndHash() on the remaining bytes of the message and stores the output into
     // payload_buffer.
     // If there are no more message patterns returns two new CipherState objects by calling Split().

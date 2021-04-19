@@ -3,6 +3,8 @@ import Crypto
 
 // https://noiseprotocol.org/noise.html#cipher-functions
 public protocol Cipher {
+  static var identifier: String { get }
+
   // Encrypts plaintext using the cipher key k of 32 bytes and an 8-byte unsigned integer nonce n
   // which must be unique for the key k. Returns the ciphertext. Encryption must be done with an
   // "AEAD" encryption mode with the associated data ad (using the terminology from [1]) and
@@ -23,11 +25,40 @@ public protocol Cipher {
   func rekey(k: Data) throws -> Data
 }
 
+extension Cipher {
+  func rekey(k: Data) throws -> Data {
+    return try self.encrypt(k: k, n: 0xffffffffffffffff, ad: Data(), plaintext: Data(repeating: 0, count: 32))
+  }
+}
+
+// A helper method to convert Nonce (which is a 64-bit unsigned integer) to Data.
+func nonceToDataBig(n: Nonce) -> Data {
+  var be = CFSwapInt64HostToBig(n)
+  let data = Data(bytes: &be, count: MemoryLayout<UInt64>.size)
+
+  let padding = Data(repeating: 0, count: 4)
+  return padding + data
+}
+
+// A helper method to convert Nonce to little endian encoded Data with 32 bits of leading zeros
+// https://noiseprotocol.org/noise.html#the-chachapoly-cipher-functions
+func nonceToDataLittle(n: Nonce) -> Data {
+  var le = CFSwapInt64HostToLittle(n)
+  let data = Data(bytes: &le, count: MemoryLayout<UInt64>.size)
+
+  let padding = Data(repeating: 0, count: 4)
+  return padding + data
+}
+
 public enum Ciphers {
+  public static let supported = [AESGCM.identifier, ChaChaPoly.identifier]
+
   public static func cipher(named name: String) -> Cipher? {
     switch name {
-    case "AESGCM":
+    case AESGCM.identifier:
       return Ciphers.AESGCM()
+    case ChaChaPoly.identifier:
+      return Ciphers.ChaChaPoly()
     default:
       return nil
     }
@@ -36,19 +67,11 @@ public enum Ciphers {
 
 extension Ciphers {
   struct AESGCM: Cipher {
-
-    // A helper method to convert Nonce (which is a 64-bit unsigned integer) to Data.
-    func nonceToData(n: Nonce) -> Data {
-      var be = CFSwapInt64HostToBig(n)
-      let data = Data(bytes: &be, count: MemoryLayout<UInt64>.size)
-
-      let padding = Data(repeating: 0, count: 4)
-      return padding + data
-    }
+    static let identifier: String = "AESGCM"
 
     func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
-      let nonce = try AES.GCM.Nonce(data: nonceToData(n: n))
+      let nonce = try AES.GCM.Nonce(data: nonceToDataBig(n: n))
 
       let box = try AES.GCM.seal(plaintext, using: key, nonce: nonce, authenticating: ad)
       return box.ciphertext + box.tag
@@ -56,15 +79,33 @@ extension Ciphers {
 
     func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
       let key = SymmetricKey(data: k)
-      let nonce = try AES.GCM.Nonce(data: nonceToData(n: n))
+      let nonce = try AES.GCM.Nonce(data: nonceToDataBig(n: n))
       let box = try AES.GCM.SealedBox(combined: nonce + ciphertext)
 
       return try AES.GCM.open(box, using: key, authenticating: ad)
     }
-
-    func rekey(k: Data) throws -> Data {
-      return try self.encrypt(k: k, n: 0xffffffffffffffff, ad: Data(), plaintext: Data(repeating: 0, count: 32))
-    }
   }
 
+}
+
+extension Ciphers {
+  struct ChaChaPoly: Cipher {
+    static let identifier: String = "ChaChaPoly"
+
+    func encrypt(k: Data, n: Nonce, ad: Data, plaintext: Data) throws -> Data {
+      let key = SymmetricKey(data: k)
+      let nonce = try Crypto.ChaChaPoly.Nonce(data: nonceToDataLittle(n: n))
+
+      let box = try Crypto.ChaChaPoly.seal(plaintext, using: key, nonce: nonce, authenticating: ad)
+      return box.ciphertext + box.tag
+    }
+
+    func decrypt(k: Data, n: Nonce, ad: Data, ciphertext: Data) throws -> Data {
+      let key = SymmetricKey(data: k)
+      let nonce = try Crypto.ChaChaPoly.Nonce(data: nonceToDataLittle(n: n))
+      let box = try Crypto.ChaChaPoly.SealedBox(combined: nonce + ciphertext)
+
+      return try Crypto.ChaChaPoly.open(box, using: key, authenticating: ad)
+    }
+  }
 }
