@@ -50,7 +50,7 @@ The functions are supported based on [section 12 of the specification](https://n
 #### Hash functions
 
 * [X] SHA256
-* [ ] SHA512
+* [X] SHA512
 * [ ] BLAKE2s
 * [ ] BLAKE2b
 
