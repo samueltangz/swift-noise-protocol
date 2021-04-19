@@ -40,9 +40,11 @@ func nonceToDataBig(n: Nonce) -> Data {
   return padding + data
 }
 
+// A helper method to convert Nonce to little endian encoded Data with 32 bits of leading zeros
+// https://noiseprotocol.org/noise.html#the-chachapoly-cipher-functions
 func nonceToDataLittle(n: Nonce) -> Data {
-  var be = CFSwapInt64HostToLittle(n)
-  let data = Data(bytes: &be, count: MemoryLayout<UInt64>.size)
+  var le = CFSwapInt64HostToLittle(n)
+  let data = Data(bytes: &le, count: MemoryLayout<UInt64>.size)
 
   let padding = Data(repeating: 0, count: 4)
   return padding + data
