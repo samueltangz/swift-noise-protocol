@@ -3,7 +3,7 @@ import Foundation
 public typealias PublicKey = Data
 public typealias SecretKey = Data
 
-public struct KeyPair {
+public struct KeyPair: Codable {
   public let publicKey: PublicKey
   public let secretKey: SecretKey
 }
