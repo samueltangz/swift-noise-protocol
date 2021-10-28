@@ -4,8 +4,8 @@ public typealias PublicKey = Data
 public typealias SecretKey = Data
 
 public struct KeyPair: Codable {
-  public let publicKey: PublicKey
-  public let secretKey: SecretKey
+  public var publicKey: PublicKey
+  public var secretKey: SecretKey
 }
 
 public typealias Nonce = UInt64
