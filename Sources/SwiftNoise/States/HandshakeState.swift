@@ -363,8 +363,9 @@ extension HandshakeState {
       out += try self.dispatchWriteToken(token: token)
     }
     // Appends EncryptAndHash(payload) to the buffer.
-    out += try self.symmetricState.encryptAndHash(plaintext: payload)
-
+    if(!payload.isEmpty){
+     out += try self.symmetricState.encryptAndHash(plaintext: payload)
+    }
     // If there are no more message patterns returns two new CipherState objects by calling Split().
     if self.messagePatterns.isEmpty {
       return .handshakeComplete(out, try self.split())
